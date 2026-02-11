@@ -39,7 +39,11 @@ public final class CreditShopPage {
     public void appendUi(UICommandBuilder commandBuilder, UIEventBuilder eventBuilder) {
         commandBuilder.append("Pages/Credits/CreditShop.ui");
         commandBuilder.set("#TitleLabel.Text", activeTitle);
-        commandBuilder.set("#CreditsBalanceLabel.Text", config.currencyName() + ": " + creditsService.getBalance(player.uuid(), player.name()));
+        if (!creditsService.isOnline()) {
+            commandBuilder.set("#CreditsBalanceLabel.Text", "Credits system unavailable");
+        } else {
+            commandBuilder.set("#CreditsBalanceLabel.Text", config.currencyName() + ": " + creditsService.getBalance(player.uuid(), player.name()));
+        }
         commandBuilder.set("#CategoryContentLabel.Text", contentText);
 
         List<CreditConfig.CategoryEntry> categories = config.categories();

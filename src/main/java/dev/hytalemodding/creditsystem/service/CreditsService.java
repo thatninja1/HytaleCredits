@@ -1,55 +1,93 @@
 package dev.hytalemodding.creditsystem.service;
 
-import dev.hytalemodding.creditsystem.db.SqlCreditsRepository;
+import dev.hytalemodding.creditsystem.db.CreditsRepository;
 
-import java.sql.SQLException;
 import java.util.UUID;
 
 public final class CreditsService {
-    private final SqlCreditsRepository repository;
+    private CreditsRepository repository;
+    private boolean dbOnline;
+    private String backendName;
+    private String location;
+    private String lastError;
 
-    public CreditsService(SqlCreditsRepository repository) {
+    public CreditsService() {
+        this.dbOnline = false;
+        this.backendName = "unknown";
+        this.location = "unknown";
+        this.lastError = "Not initialized";
+    }
+
+    public void setRepository(CreditsRepository repository) {
         this.repository = repository;
+        this.backendName = repository.backendName();
+        this.location = repository.location();
+        this.dbOnline = true;
+        this.lastError = "none";
+    }
+
+    public void markOffline(String backendName, String location, String errorMessage) {
+        this.repository = null;
+        this.backendName = backendName;
+        this.location = location;
+        this.dbOnline = false;
+        this.lastError = errorMessage;
+    }
+
+    public boolean isOnline() {
+        return dbOnline && repository != null;
+    }
+
+    public String backendName() {
+        return backendName;
+    }
+
+    public String location() {
+        return location;
+    }
+
+    public String lastError() {
+        return lastError;
     }
 
     public long getBalance(UUID playerUuid, String playerName) {
-        try {
-            return repository.getBalance(playerUuid, playerName);
-        } catch (SQLException e) {
-            throw new IllegalStateException("Failed to fetch balance", e);
-        }
+        requireOnline();
+        return repository.getBalance(playerUuid, playerName);
     }
 
     public void give(UUID playerUuid, String playerName, long amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero.");
         }
-        try {
-            repository.addCredits(playerUuid, playerName, amount);
-        } catch (SQLException e) {
-            throw new IllegalStateException("Failed to add credits", e);
-        }
+        requireOnline();
+        repository.addCredits(playerUuid, playerName, amount);
     }
 
     public void remove(UUID playerUuid, String playerName, long amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero.");
         }
-        try {
-            repository.removeCredits(playerUuid, playerName, amount);
-        } catch (SQLException e) {
-            throw new IllegalStateException("Failed to remove credits", e);
-        }
+        requireOnline();
+        repository.removeCredits(playerUuid, playerName, amount);
     }
 
     public void set(UUID playerUuid, String playerName, long amount) {
         if (amount < 0) {
             throw new IllegalArgumentException("Amount must be greater than or equal to zero.");
         }
-        try {
-            repository.setCredits(playerUuid, playerName, amount);
-        } catch (SQLException e) {
-            throw new IllegalStateException("Failed to set credits", e);
+        requireOnline();
+        repository.setCredits(playerUuid, playerName, amount);
+    }
+
+    public void shutdown() {
+        if (repository != null) {
+            repository.shutdown();
+        }
+    }
+
+    private void requireOnline() {
+        if (!isOnline()) {
+            throw new IllegalStateException("Credits system unavailable");
         }
     }
 }

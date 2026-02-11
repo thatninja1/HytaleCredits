@@ -2,26 +2,18 @@
 
 Hytale server plugin/mod source project with:
 
-- SQL-backed shared credits economy (`player_credits` table, MySQL/MariaDB)
-- `/credits` balance + admin subcommands (`give`, `set`, `remove`)
+- SQL/multi-storage credits economy (`credits` table/collection)
+- `/credits` balance + admin subcommands (`give`, `set`, `remove`) + `/credits storage`
 - `/creditshop` UI page under `Common/UI/Custom/Pages/Credits/CreditShop.ui`
-- JSON configuration (`config.json`) including UI title, categories, and DB settings
+- JSON configuration (`config.json`) with default `storage.type = h2` for zero-config startup
+- Automatic fallback to H2 when external storage is unavailable
 
-## Build (no Gradle wrapper)
+## Build
 
 Use system Gradle:
 
 ```bash
-gradle build
+gradle clean build
 ```
 
-## Fallback compile (plain javac, no binary generation required)
-
-You can compile sources without packaging:
-
-```bash
-# Example: compile source and resources for validation only
-javac --release 21 -d out $(find src/main/java -name "*.java")
-```
-
-(Do not generate or commit jars in this environment.)
+This project builds a single fat jar (`build/libs/CreditSystem-1.0.0.jar`) with runtime dependencies.

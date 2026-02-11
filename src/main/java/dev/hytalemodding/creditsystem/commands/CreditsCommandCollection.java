@@ -20,23 +20,45 @@ public final class CreditsCommandCollection {
             return;
         }
 
+        if (!creditsService.isOnline()) {
+            sender.sendMessage("Credits system unavailable.");
+            return;
+        }
+
         long balance = creditsService.getBalance(self.uuid(), self.name());
         sender.sendMessage(currencyName + ": " + balance);
     }
 
     public void executeAdmin(CommandSender sender, String subcommand, PlayerRef target, long amount) {
+        String normalized = subcommand.toLowerCase(Locale.ROOT);
+        if (normalized.equals("storage")) {
+            executeStorage(sender);
+            return;
+        }
+
+        if (!creditsService.isOnline()) {
+            sender.sendMessage("Credits system unavailable.");
+            return;
+        }
+
         if (target == null || !target.online()) {
             sender.sendMessage("Target player must be online.");
             return;
         }
 
-        String normalized = subcommand.toLowerCase(Locale.ROOT);
         switch (normalized) {
             case "give" -> executeGive(sender, target, amount);
             case "set" -> executeSet(sender, target, amount);
             case "remove" -> executeRemove(sender, target, amount);
-            default -> sender.sendMessage("Usage: /credits give|set|remove <player> <amount>");
+            default -> sender.sendMessage("Usage: /credits give|set|remove <player> <amount> OR /credits storage");
         }
+    }
+
+    public void executeStorage(CommandSender sender) {
+        sender.sendMessage("Storage backend: " + creditsService.backendName());
+        sender.sendMessage("Storage location: " + creditsService.location());
+        sender.sendMessage("Storage online: " + creditsService.isOnline());
+        sender.sendMessage("Storage last error: " + creditsService.lastError());
     }
 
     private void executeGive(CommandSender sender, PlayerRef target, long amount) {

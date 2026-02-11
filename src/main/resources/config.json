@@ -13,15 +13,42 @@
       "name": "Tags"
     }
   ],
-  "database": {
-    "host": "127.0.0.1",
-    "port": 3306,
-    "database": "hytale",
-    "username": "root",
-    "password": "password",
-    "maximumPoolSize": 10,
-    "connectTimeoutMs": 5000,
-    "socketTimeoutMs": 15000
+  "storage": {
+    "type": "h2",
+    "h2": {
+      "file": "plugins/CreditSystem/credits"
+    },
+    "sqlite": {
+      "file": "plugins/CreditSystem/credits.db"
+    },
+    "mysql": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "database": "creditsystem",
+      "username": "root",
+      "password": "password",
+      "useSSL": false
+    },
+    "mariadb": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "database": "creditsystem",
+      "username": "root",
+      "password": "password",
+      "useSSL": false
+    },
+    "postgresql": {
+      "host": "127.0.0.1",
+      "port": 5432,
+      "database": "creditsystem",
+      "username": "postgres",
+      "password": "password",
+      "ssl": false
+    },
+    "mongodb": {
+      "uri": "mongodb://user:pass@127.0.0.1:27017",
+      "database": "creditsystem"
+    }
   },
   "debug": false
 }
