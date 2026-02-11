@@ -46,6 +46,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private final Logger logger;
     private final CategoryShopLoader shopLoader;
 
+    private UICommandBuilder currentUiCommandBuilder;
     private String selectedCategoryKey;
     private String selectedCategoryName;
     private int currentPage;
@@ -87,6 +88,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
         String template = hasCategory ? ITEMS_TEMPLATE : EMPTY_TEMPLATE;
         uiCommandBuilder.append(template);
+        this.currentUiCommandBuilder = uiCommandBuilder;
 
         applyGlobalTheme(config, uiCommandBuilder, hasCategory);
 
@@ -181,10 +183,10 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                         item.styles() == null ? null : item.styles().buy()
                 );
 
-                uiCommandBuilder.set("#ItemCard" + card + "Name.Style", styleOf(nameStyle, "Center"));
-                uiCommandBuilder.set("#ItemCard" + card + "Price.Style", styleOf(priceStyle, "Center"));
-                uiCommandBuilder.set("#ItemCard" + card + "Desc.Style", styleOf(descStyle, "Start"));
-                uiCommandBuilder.set("#ItemCard" + card + "BuyLabel.Style", styleOf(buyStyle, "Center"));
+                applyTextStyle("#ItemCard" + card + "Name", nameStyle.fontSize(), nameStyle.color(), "Center");
+                applyTextStyle("#ItemCard" + card + "Price", priceStyle.fontSize(), priceStyle.color(), "Center");
+                applyTextStyle("#ItemCard" + card + "Desc", descStyle.fontSize(), descStyle.color(), "Start");
+                applyTextStyle("#ItemCard" + card + "BuyLabel", buyStyle.fontSize(), buyStyle.color(), "Center");
 
                 uiCommandBuilder.set("#ItemCard" + card + "Name.Text", item.name());
                 uiCommandBuilder.set("#ItemCard" + card + "Price.Text", item.price() + " " + config.currencyName());
@@ -227,24 +229,29 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     private void applyGlobalTheme(CreditConfig config, UICommandBuilder uiCommandBuilder, boolean hasCategory) {
         CreditConfig.UiTheme theme = config.ui().theme();
-        uiCommandBuilder.set("#TitleLabel.Style", styleOf(theme.title(), "Center"));
-        uiCommandBuilder.set("#CreditsBalanceLabel.Style", styleOf(theme.credits(), "Center"));
-        uiCommandBuilder.set("#CloseButtonLabel.Style", styleOf(theme.closeButton(), "Center"));
+        applyTextStyle("#TitleLabel", theme.title().fontSize(), theme.title().color(), "Center");
+        applyTextStyle("#CreditsBalanceLabel", theme.credits().fontSize(), theme.credits().color(), "Center");
+        applyTextStyle("#CloseButtonLabel", theme.closeButton().fontSize(), theme.closeButton().color(), "Center");
 
         for (int i = 1; i <= MAX_CATEGORY_BUTTONS; i++) {
-            uiCommandBuilder.set("#CategoryButton" + i + "Label.Style", styleOf(theme.categoryButton(), "Start"));
+            applyTextStyle("#CategoryButton" + i + "Label", theme.categoryButton().fontSize(), theme.categoryButton().color(), "Start");
         }
 
         if (hasCategory) {
-            uiCommandBuilder.set("#SelectedCategoryLabel.Style", styleOf(theme.selectedCategory(), "Center"));
-            uiCommandBuilder.set("#PageIndicatorLabel.Style", styleOf(theme.pageIndicator(), "Center"));
-            uiCommandBuilder.set("#PrevPageButtonLabel.Style", styleOf(theme.paginationButton(), "Center"));
-            uiCommandBuilder.set("#NextPageButtonLabel.Style", styleOf(theme.paginationButton(), "Center"));
+            applyTextStyle("#SelectedCategoryLabel", theme.selectedCategory().fontSize(), theme.selectedCategory().color(), "Center");
+            applyTextStyle("#PageIndicatorLabel", theme.pageIndicator().fontSize(), theme.pageIndicator().color(), "Center");
+            applyTextStyle("#PrevPageButtonLabel", theme.paginationButton().fontSize(), theme.paginationButton().color(), "Center");
+            applyTextStyle("#NextPageButtonLabel", theme.paginationButton().fontSize(), theme.paginationButton().color(), "Center");
         }
     }
 
-    private String styleOf(CreditConfig.TextStyle style, String alignment) {
-        return "(FontSize: " + style.fontSize() + ", Alignment: " + alignment + ", TextColor: " + style.color() + ");";
+    private void applyTextStyle(String baseSelector, int fontSize, String color, String alignment) {
+        if (currentUiCommandBuilder == null) {
+            return;
+        }
+        currentUiCommandBuilder.set(baseSelector + ".Style.FontSize", String.valueOf(fontSize));
+        currentUiCommandBuilder.set(baseSelector + ".Style.TextColor", color);
+        currentUiCommandBuilder.set(baseSelector + ".Style.Alignment", alignment);
     }
 
     private CreditConfig.TextStyle resolveStyle(CreditConfig.TextStyle global, CreditConfig.TextStyle category, CreditConfig.TextStyle item) {

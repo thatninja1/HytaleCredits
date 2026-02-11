@@ -181,6 +181,10 @@ The runtime style merge order is:
 - 5 items per page.
 - `Prev` / `Next` controls appear when needed.
 
+### Runtime CustomUI styling safety
+
+Hytale CustomUI does not support setting Style structs directly at runtime. This plugin applies font size + color by setting Style subfields (`.Style.FontSize`, `.Style.TextColor`, `.Style.Alignment`).
+
 ### Description wrapping
 
 Hytale Custom UI in this project does not support `TextWrap`/`ScrollView`.
