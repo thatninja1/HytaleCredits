@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import dev.hytalemodding.creditsystem.config.CreditConfig;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -31,11 +32,13 @@ public final class CategoryShopLoader {
     private final Path shopDirectory;
     private final Logger logger;
     private final Map<String, Map<String, ShopItem>> shopCache;
+    private final Map<String, CategoryStyles> styleCache;
 
     public CategoryShopLoader(Logger logger) {
         this.logger = logger;
         this.shopDirectory = Path.of("plugins", "CreditSystem", "shops");
         this.shopCache = new LinkedHashMap<>();
+        this.styleCache = new LinkedHashMap<>();
     }
 
     public synchronized Path ensureCategoryFile(String categoryKey) {
@@ -45,14 +48,29 @@ public final class CategoryShopLoader {
             if (!Files.exists(file)) {
                 JsonObject root = new JsonObject();
 
+                JsonObject meta = new JsonObject();
+                JsonObject metaStyles = new JsonObject();
+                JsonObject metaDescriptionStyle = new JsonObject();
+                metaDescriptionStyle.addProperty("color", "#808080");
+                metaDescriptionStyle.addProperty("fontSize", 13);
+                metaStyles.add("itemDescription", metaDescriptionStyle);
+                meta.add("styles", metaStyles);
+                root.add("meta", meta);
+
                 JsonObject item1 = new JsonObject();
                 item1.addProperty("name", "VIP Rank");
                 item1.addProperty("price", 1000);
-                item1.addProperty("description", "Unlocks VIP permissions and chat prefix.");
+                item1.addProperty("description", "Unlocks VIP permissions, chat prefix, and store perks.");
                 JsonArray item1Commands = new JsonArray();
                 item1Commands.add("lp user {player} parent add vip");
                 item1Commands.add("say {player} purchased VIP!");
                 item1.add("commands", item1Commands);
+                JsonObject item1Styles = new JsonObject();
+                JsonObject item1NameStyle = new JsonObject();
+                item1NameStyle.addProperty("color", "#F8FAFC");
+                item1NameStyle.addProperty("fontSize", 20);
+                item1Styles.add("name", item1NameStyle);
+                item1.add("styles", item1Styles);
                 root.add("item1", item1);
 
                 JsonObject item2 = new JsonObject();
@@ -84,9 +102,10 @@ public final class CategoryShopLoader {
         logger.info("[CreditSystem] Loading shop file for category=" + normalized + " path=" + file.toAbsolutePath());
 
         try {
-            Map<String, ShopItem> parsed = parseShopFile(file);
-            Map<String, ShopItem> immutableOrdered = Collections.unmodifiableMap(new LinkedHashMap<>(parsed));
+            ParsedCategory parsed = parseShopFile(file);
+            Map<String, ShopItem> immutableOrdered = Collections.unmodifiableMap(new LinkedHashMap<>(parsed.items()));
             shopCache.put(normalized, immutableOrdered);
+            styleCache.put(normalized, parsed.styles());
             return immutableOrdered;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to parse shop file for " + normalized + ": " + file.toAbsolutePath(), e);
@@ -95,6 +114,16 @@ public final class CategoryShopLoader {
             }
             throw new IllegalStateException("Failed to parse shop file for " + normalized + ": " + file.toAbsolutePath(), e);
         }
+    }
+
+    public synchronized CategoryStyles loadCategoryStyles(String categoryKey) {
+        String normalized = normalizeKey(categoryKey);
+        CategoryStyles cached = styleCache.get(normalized);
+        if (cached != null) {
+            return cached;
+        }
+        loadCategoryItems(normalized);
+        return styleCache.getOrDefault(normalized, CategoryStyles.empty());
     }
 
     public synchronized ReloadReport reloadAllShops(Collection<String> categoryKeys) {
@@ -109,8 +138,9 @@ public final class CategoryShopLoader {
             String key = normalizeKey(rawKey);
             Path file = ensureCategoryFile(key);
             try {
-                Map<String, ShopItem> parsed = parseShopFile(file);
-                shopCache.put(key, Collections.unmodifiableMap(new LinkedHashMap<>(parsed)));
+                ParsedCategory parsed = parseShopFile(file);
+                shopCache.put(key, Collections.unmodifiableMap(new LinkedHashMap<>(parsed.items())));
+                styleCache.put(key, parsed.styles());
                 successCount++;
             } catch (Exception parseError) {
                 String reason = parseError.getMessage() == null ? "unknown parse error" : parseError.getMessage();
@@ -123,21 +153,22 @@ public final class CategoryShopLoader {
         return new ReloadReport(successCount, failures);
     }
 
-    private Map<String, ShopItem> parseShopFile(Path file) throws IOException {
+    private ParsedCategory parseShopFile(Path file) throws IOException {
         try (Reader reader = Files.newBufferedReader(file)) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-
             List<OrderedItem> numeric = new ArrayList<>();
-            List<OrderedItem> nonNumeric = new ArrayList<>();
+
+            CategoryStyles categoryStyles = parseMetaStyles(root);
             int originalIndex = 0;
 
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-                if (!entry.getValue().isJsonObject()) {
+                String itemId = entry.getKey();
+                Matcher matcher = ITEM_NUMERIC_KEY.matcher(itemId);
+                if (!matcher.matches() || !entry.getValue().isJsonObject()) {
                     originalIndex++;
                     continue;
                 }
 
-                String itemId = entry.getKey();
                 JsonObject obj = entry.getValue().getAsJsonObject();
                 String name = obj.has("name") ? obj.get("name").getAsString() : itemId;
                 long price = obj.has("price") ? obj.get("price").getAsLong() : 0L;
@@ -154,14 +185,10 @@ public final class CategoryShopLoader {
                     commands.add(obj.get("command").getAsString());
                 }
 
-                ShopItem shopItem = new ShopItem(name, Math.max(0L, price), description, commands);
-                Matcher matcher = ITEM_NUMERIC_KEY.matcher(itemId);
-                if (matcher.matches()) {
-                    int numericSuffix = Integer.parseInt(matcher.group(1));
-                    numeric.add(new OrderedItem(itemId, shopItem, originalIndex, numericSuffix));
-                } else {
-                    nonNumeric.add(new OrderedItem(itemId, shopItem, originalIndex, Integer.MAX_VALUE));
-                }
+                ShopItem.ItemStyles itemStyles = parseItemStyles(obj, file, itemId);
+                ShopItem shopItem = new ShopItem(name, Math.max(0L, price), description, commands, itemStyles);
+                int numericSuffix = Integer.parseInt(matcher.group(1));
+                numeric.add(new OrderedItem(itemId, shopItem, originalIndex, numericSuffix));
                 originalIndex++;
             }
 
@@ -172,17 +199,76 @@ public final class CategoryShopLoader {
                 }
                 return Integer.compare(a.originalIndex(), b.originalIndex());
             });
-            nonNumeric.sort((a, b) -> Integer.compare(a.originalIndex(), b.originalIndex()));
 
             Map<String, ShopItem> ordered = new LinkedHashMap<>();
             for (OrderedItem item : numeric) {
                 ordered.put(item.itemId(), item.shopItem());
             }
-            for (OrderedItem item : nonNumeric) {
-                ordered.put(item.itemId(), item.shopItem());
-            }
-            return ordered;
+            return new ParsedCategory(ordered, categoryStyles);
         }
+    }
+
+    private CategoryStyles parseMetaStyles(JsonObject root) {
+        if (!root.has("meta") || !root.get("meta").isJsonObject()) {
+            return CategoryStyles.empty();
+        }
+        JsonObject meta = root.getAsJsonObject("meta");
+        if (!meta.has("styles") || !meta.get("styles").isJsonObject()) {
+            return CategoryStyles.empty();
+        }
+        JsonObject styles = meta.getAsJsonObject("styles");
+        return new CategoryStyles(
+                parseTextStyle(styles, "itemName", "meta.styles.itemName"),
+                parseTextStyle(styles, "itemPrice", "meta.styles.itemPrice"),
+                parseTextStyle(styles, "itemDescription", "meta.styles.itemDescription"),
+                parseTextStyle(styles, "buyLabel", "meta.styles.buyLabel")
+        );
+    }
+
+    private ShopItem.ItemStyles parseItemStyles(JsonObject obj, Path file, String itemId) {
+        if (!obj.has("styles") || !obj.get("styles").isJsonObject()) {
+            return null;
+        }
+        JsonObject styles = obj.getAsJsonObject("styles");
+        String basePath = file.getFileName() + ":" + itemId + ".styles";
+        return new ShopItem.ItemStyles(
+                parseTextStyle(styles, "name", basePath + ".name"),
+                parseTextStyle(styles, "price", basePath + ".price"),
+                parseTextStyle(styles, "description", basePath + ".description"),
+                parseTextStyle(styles, "buy", basePath + ".buy")
+        );
+    }
+
+    private CreditConfig.TextStyle parseTextStyle(JsonObject parent, String key, String path) {
+        if (!parent.has(key) || !parent.get(key).isJsonObject()) {
+            return null;
+        }
+        JsonObject value = parent.getAsJsonObject(key);
+        CreditConfig.TextStyle base = new CreditConfig.TextStyle("#FFFFFF", 14);
+
+        String color = base.color();
+        if (value.has("color") && value.get("color").isJsonPrimitive()) {
+            String raw = value.get("color").getAsString();
+            if (raw.matches("^#[0-9A-Fa-f]{6}$")) {
+                color = raw;
+            } else {
+                logger.warning("[CreditSystem] Invalid color for " + path + ".color=" + raw
+                        + ". Expected #RRGGBB. Ignoring override.");
+            }
+        }
+
+        int fontSize = base.fontSize();
+        if (value.has("fontSize") && value.get("fontSize").isJsonPrimitive()) {
+            int raw = value.get("fontSize").getAsInt();
+            if (raw >= 8 && raw <= 72) {
+                fontSize = raw;
+            } else {
+                logger.warning("[CreditSystem] Invalid fontSize for " + path + ".fontSize=" + raw
+                        + ". Allowed range is 8..72. Ignoring override.");
+            }
+        }
+
+        return new CreditConfig.TextStyle(color, fontSize);
     }
 
     private String normalizeKey(String key) {
@@ -190,6 +276,20 @@ public final class CategoryShopLoader {
     }
 
     private record OrderedItem(String itemId, ShopItem shopItem, int originalIndex, int numericSuffix) {
+    }
+
+    private record ParsedCategory(Map<String, ShopItem> items, CategoryStyles styles) {
+    }
+
+    public record CategoryStyles(
+            CreditConfig.TextStyle itemName,
+            CreditConfig.TextStyle itemPrice,
+            CreditConfig.TextStyle itemDescription,
+            CreditConfig.TextStyle buyLabel
+    ) {
+        public static CategoryStyles empty() {
+            return new CategoryStyles(null, null, null, null);
+        }
     }
 
     public record ReloadReport(int successfulFiles, Map<String, String> failures) {

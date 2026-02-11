@@ -37,6 +37,9 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private static final String ITEMS_RESOURCE_PATH = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
     private static final int MAX_CATEGORY_BUTTONS = 12;
     private static final int PAGE_SIZE = 5;
+    private static final int DESCRIPTION_MAX_LINES = 6;
+    private static final int DESCRIPTION_BASE_FONT = 13;
+    private static final int DESCRIPTION_BASE_CHARS = 22;
 
     private final CreditsService creditsService;
     private final Supplier<CreditConfig> configSupplier;
@@ -84,6 +87,8 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
         String template = hasCategory ? ITEMS_TEMPLATE : EMPTY_TEMPLATE;
         uiCommandBuilder.append(template);
+
+        applyGlobalTheme(config, uiCommandBuilder, hasCategory);
 
         uiCommandBuilder.set("#TitleLabel.Text", config.ui().title());
         if (!creditsService.isOnline()) {
@@ -139,6 +144,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     private void renderPagedItems(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
         Map<String, ShopItem> itemMap = shopLoader.loadCategoryItems(selectedCategoryKey);
+        CategoryShopLoader.CategoryStyles categoryStyles = shopLoader.loadCategoryStyles(selectedCategoryKey);
         List<Map.Entry<String, ShopItem>> allItems = new ArrayList<>(itemMap.entrySet());
         if (config.debug()) {
             String order = String.join(", ", allItems.stream().map(Map.Entry::getKey).toList());
@@ -153,10 +159,42 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             if (index < allItems.size()) {
                 Map.Entry<String, ShopItem> entry = allItems.get(index);
                 ShopItem item = entry.getValue();
+
+                CreditConfig.TextStyle nameStyle = resolveStyle(
+                        config.ui().theme().itemName(),
+                        categoryStyles.itemName(),
+                        item.styles() == null ? null : item.styles().name()
+                );
+                CreditConfig.TextStyle priceStyle = resolveStyle(
+                        config.ui().theme().itemPrice(),
+                        categoryStyles.itemPrice(),
+                        item.styles() == null ? null : item.styles().price()
+                );
+                CreditConfig.TextStyle descStyle = resolveStyle(
+                        config.ui().theme().itemDescription(),
+                        categoryStyles.itemDescription(),
+                        item.styles() == null ? null : item.styles().description()
+                );
+                CreditConfig.TextStyle buyStyle = resolveStyle(
+                        config.ui().theme().buyLabel(),
+                        categoryStyles.buyLabel(),
+                        item.styles() == null ? null : item.styles().buy()
+                );
+
+                uiCommandBuilder.set("#ItemCard" + card + "Name.Style", styleOf(nameStyle, "Center"));
+                uiCommandBuilder.set("#ItemCard" + card + "Price.Style", styleOf(priceStyle, "Center"));
+                uiCommandBuilder.set("#ItemCard" + card + "Desc.Style", styleOf(descStyle, "Start"));
+                uiCommandBuilder.set("#ItemCard" + card + "BuyLabel.Style", styleOf(buyStyle, "Center"));
+
                 uiCommandBuilder.set("#ItemCard" + card + "Name.Text", item.name());
                 uiCommandBuilder.set("#ItemCard" + card + "Price.Text", item.price() + " " + config.currencyName());
-                uiCommandBuilder.set("#ItemCard" + card + "Desc.Text", wrapForUi(item.description(), 22, 6));
+
+                int charsPerLine = Math.max(10, Math.round((float) DESCRIPTION_BASE_CHARS
+                        * DESCRIPTION_BASE_FONT
+                        / Math.max(1, descStyle.fontSize())));
+                uiCommandBuilder.set("#ItemCard" + card + "Desc.Text", wrapForUi(item.description(), charsPerLine, DESCRIPTION_MAX_LINES));
                 uiCommandBuilder.set("#ItemCard" + card + "BuyLabel.Text", "Buy");
+
                 uiEventBuilder.addEventBinding(
                         CustomUIEventBindingType.Activating,
                         "#ItemCard" + card + "Buy",
@@ -185,6 +223,38 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                     EventData.of("action", "page:next")
             );
         }
+    }
+
+    private void applyGlobalTheme(CreditConfig config, UICommandBuilder uiCommandBuilder, boolean hasCategory) {
+        CreditConfig.UiTheme theme = config.ui().theme();
+        uiCommandBuilder.set("#TitleLabel.Style", styleOf(theme.title(), "Center"));
+        uiCommandBuilder.set("#CreditsBalanceLabel.Style", styleOf(theme.credits(), "Center"));
+        uiCommandBuilder.set("#CloseButtonLabel.Style", styleOf(theme.closeButton(), "Center"));
+
+        for (int i = 1; i <= MAX_CATEGORY_BUTTONS; i++) {
+            uiCommandBuilder.set("#CategoryButton" + i + "Label.Style", styleOf(theme.categoryButton(), "Start"));
+        }
+
+        if (hasCategory) {
+            uiCommandBuilder.set("#SelectedCategoryLabel.Style", styleOf(theme.selectedCategory(), "Center"));
+            uiCommandBuilder.set("#PageIndicatorLabel.Style", styleOf(theme.pageIndicator(), "Center"));
+            uiCommandBuilder.set("#PrevPageButtonLabel.Style", styleOf(theme.paginationButton(), "Center"));
+            uiCommandBuilder.set("#NextPageButtonLabel.Style", styleOf(theme.paginationButton(), "Center"));
+        }
+    }
+
+    private String styleOf(CreditConfig.TextStyle style, String alignment) {
+        return "(FontSize: " + style.fontSize() + ", Alignment: " + alignment + ", TextColor: " + style.color() + ");";
+    }
+
+    private CreditConfig.TextStyle resolveStyle(CreditConfig.TextStyle global, CreditConfig.TextStyle category, CreditConfig.TextStyle item) {
+        if (item != null) {
+            return item;
+        }
+        if (category != null) {
+            return category;
+        }
+        return global;
     }
 
     @Override
@@ -457,6 +527,10 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             }
             if (content.contains("ScrollView")) {
                 logger.severe("[CreditSystem] Invalid UI markup: unsupported ScrollView node detected in " + resourcePath);
+                return false;
+            }
+            if (content.contains("TextWrap")) {
+                logger.severe("[CreditSystem] Invalid UI markup: unsupported TextWrap property detected in " + resourcePath);
                 return false;
             }
             return true;

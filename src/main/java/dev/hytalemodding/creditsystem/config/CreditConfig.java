@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.logging.Logger;
 
 public record CreditConfig(
@@ -39,18 +40,21 @@ public record CreditConfig(
 
         try (Reader reader = Files.newBufferedReader(configPath)) {
             CreditConfig loaded = GSON.fromJson(reader, CreditConfig.class);
-            return sanitize(loaded);
+            return sanitize(loaded, logger);
         }
     }
 
-    private static CreditConfig sanitize(CreditConfig value) {
+    private static CreditConfig sanitize(CreditConfig value, Logger logger) {
         CreditConfig defaults = defaults();
         if (value == null) {
             return defaults;
         }
 
-        UiSettings ui = value.ui() == null ? defaults.ui() : new UiSettings(
-                value.ui().title() == null || value.ui().title().isBlank() ? defaults.ui().title() : value.ui().title()
+        UiSettings ui = value.ui() == null
+                ? defaults.ui()
+                : new UiSettings(
+                value.ui().title() == null || value.ui().title().isBlank() ? defaults.ui().title() : value.ui().title(),
+                UiTheme.sanitize(value.ui().theme(), defaults.ui().theme(), logger, "ui.theme")
         );
 
         String currencyName = value.currencyName() == null || value.currencyName().isBlank()
@@ -77,7 +81,7 @@ public record CreditConfig(
         categories.add(new CategoryEntry("tags", "Tags"));
 
         return new CreditConfig(
-                new UiSettings("Credit Shop"),
+                new UiSettings("Credit Shop", UiTheme.defaults()),
                 "Credits",
                 categories,
                 StorageSettings.defaults(),
@@ -85,7 +89,87 @@ public record CreditConfig(
         );
     }
 
-    public record UiSettings(String title) {
+    public record UiSettings(String title, UiTheme theme) {
+    }
+
+    public record UiTheme(
+            TextStyle title,
+            TextStyle credits,
+            TextStyle selectedCategory,
+            TextStyle categoryButton,
+            TextStyle closeButton,
+            TextStyle pageIndicator,
+            TextStyle paginationButton,
+            TextStyle itemName,
+            TextStyle itemPrice,
+            TextStyle itemDescription,
+            TextStyle buyLabel
+    ) {
+        public static UiTheme defaults() {
+            return new UiTheme(
+                    new TextStyle("#E5E7EB", 46),
+                    new TextStyle("#93C5FD", 24),
+                    new TextStyle("#CBD5E1", 20),
+                    new TextStyle("#FDE047", 18),
+                    new TextStyle("#E2E8F0", 16),
+                    new TextStyle("#808080", 18),
+                    new TextStyle("#E2E8F0", 16),
+                    new TextStyle("#F8FAFC", 20),
+                    new TextStyle("#FDE047", 18),
+                    new TextStyle("#CBD5E1", 13),
+                    new TextStyle("#E2E8F0", 16)
+            );
+        }
+
+        public static UiTheme sanitize(UiTheme value, UiTheme defaults, Logger logger, String path) {
+            if (value == null) {
+                return defaults;
+            }
+            return new UiTheme(
+                    TextStyle.sanitize(value.title(), defaults.title(), logger, path + ".title"),
+                    TextStyle.sanitize(value.credits(), defaults.credits(), logger, path + ".credits"),
+                    TextStyle.sanitize(value.selectedCategory(), defaults.selectedCategory(), logger, path + ".selectedCategory"),
+                    TextStyle.sanitize(value.categoryButton(), defaults.categoryButton(), logger, path + ".categoryButton"),
+                    TextStyle.sanitize(value.closeButton(), defaults.closeButton(), logger, path + ".closeButton"),
+                    TextStyle.sanitize(value.pageIndicator(), defaults.pageIndicator(), logger, path + ".pageIndicator"),
+                    TextStyle.sanitize(value.paginationButton(), defaults.paginationButton(), logger, path + ".paginationButton"),
+                    TextStyle.sanitize(value.itemName(), defaults.itemName(), logger, path + ".itemName"),
+                    TextStyle.sanitize(value.itemPrice(), defaults.itemPrice(), logger, path + ".itemPrice"),
+                    TextStyle.sanitize(value.itemDescription(), defaults.itemDescription(), logger, path + ".itemDescription"),
+                    TextStyle.sanitize(value.buyLabel(), defaults.buyLabel(), logger, path + ".buyLabel")
+            );
+        }
+    }
+
+    public record TextStyle(String color, int fontSize) {
+        private static final Pattern HEX_PATTERN = Pattern.compile("^#[0-9A-Fa-f]{6}$");
+        private static final int MIN_FONT_SIZE = 8;
+        private static final int MAX_FONT_SIZE = 72;
+
+        public static TextStyle sanitize(TextStyle value, TextStyle defaults, Logger logger, String path) {
+            if (value == null) {
+                return defaults;
+            }
+
+            String finalColor = defaults.color();
+            if (value.color() != null && HEX_PATTERN.matcher(value.color()).matches()) {
+                finalColor = value.color();
+            } else if (value.color() != null && logger != null) {
+                logger.warning("[CreditSystem] Invalid color for " + path + "=" + value.color()
+                        + ". Expected #RRGGBB. Using " + defaults.color() + ".");
+            }
+
+            int finalSize = defaults.fontSize();
+            if (value.fontSize() >= MIN_FONT_SIZE && value.fontSize() <= MAX_FONT_SIZE) {
+                finalSize = value.fontSize();
+            } else if (logger != null) {
+                logger.warning("[CreditSystem] Invalid fontSize for " + path + "=" + value.fontSize()
+                        + ". Allowed range is " + MIN_FONT_SIZE + ".." + MAX_FONT_SIZE
+                        + ". Using " + defaults.fontSize() + ".");
+            }
+
+            return new TextStyle(finalColor, finalSize);
+        }
     }
 
     public record CategoryEntry(String key, String name) {

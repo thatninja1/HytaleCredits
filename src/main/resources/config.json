@@ -1,6 +1,52 @@
 {
   "ui": {
-    "title": "Credit Shop"
+    "title": "Credit Shop",
+    "theme": {
+      "title": {
+        "color": "#E5E7EB",
+        "fontSize": 46
+      },
+      "credits": {
+        "color": "#93C5FD",
+        "fontSize": 24
+      },
+      "selectedCategory": {
+        "color": "#CBD5E1",
+        "fontSize": 20
+      },
+      "categoryButton": {
+        "color": "#FDE047",
+        "fontSize": 18
+      },
+      "closeButton": {
+        "color": "#E2E8F0",
+        "fontSize": 16
+      },
+      "pageIndicator": {
+        "color": "#808080",
+        "fontSize": 18
+      },
+      "paginationButton": {
+        "color": "#E2E8F0",
+        "fontSize": 16
+      },
+      "itemName": {
+        "color": "#F8FAFC",
+        "fontSize": 20
+      },
+      "itemPrice": {
+        "color": "#FDE047",
+        "fontSize": 18
+      },
+      "itemDescription": {
+        "color": "#CBD5E1",
+        "fontSize": 13
+      },
+      "buyLabel": {
+        "color": "#E2E8F0",
+        "fontSize": 16
+      }
+    }
   },
   "currencyName": "Credits",
   "categories": [
