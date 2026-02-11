@@ -22,6 +22,12 @@ dependencies {
   implementation("com.mysql:mysql-connector-j:8.4.0")
 }
 
+tasks.processResources {
+  from("manifest.json") {
+    into("")
+  }
+}
+
 tasks.withType<JavaCompile>().configureEach {
   options.encoding = "UTF-8"
 }
