@@ -1,0 +1,90 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.3.1'
+}
+
+group = 'com.ninja.tags'
+version = '1.0.0'
+
+def targetJavaVersion = 25
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations.configureEach {
+    // Prevent shading SLF4J API/bindings into the plugin jar.
+    exclude group: 'org.slf4j'
+    exclude group: 'ch.qos.logback'
+}
+
+dependencies {
+    compileOnly(files("libs/HytaleServer.jar"))
+    compileOnly 'net.luckperms:api:5.4'
+
+    // Small deps that are safe to shade/relocate to avoid conflicts
+    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'org.yaml:snakeyaml:2.2'
+
+    // REMOVED: sqlite-jdbc (this was the big 14MB culprit)
+    // implementation('org.xerial:sqlite-jdbc:3.46.0.0') { ... }
+}
+
+/**
+ * IMPORTANT:
+ * Disable the normal jar task so Gradle only produces ONE jar:
+ * build/libs/ninjafarming-1.0.0.jar
+ */
+tasks.named("jar") {
+    enabled = false
+}
+
+shadowJar {
+    archiveBaseName.set("ninjatags")
+    archiveClassifier.set('') // produces ninjafarming-1.0.0.jar
+    mergeServiceFiles()
+
+    // Update relocation namespace to match your project (optional but cleaner)
+    relocate 'com.google.gson', 'com.ninja.farming.shaded.gson'
+    relocate 'org.yaml.snakeyaml', 'com.ninja.farming.shaded.snakeyaml'
+
+    dependencies {
+        exclude(dependency('org.slf4j:.*:.*'))
+        exclude(dependency('ch.qos.logback:.*:.*'))
+    }
+}
+
+tasks.register("verifyHytaleServerJar") {
+    doLast {
+        def jar = file("libs/HytaleServer.jar")
+        if (!jar.exists()) {
+            throw new GradleException("Missing libs/HytaleServer.jar. Place the HytaleServer.jar in the libs/ folder before building.")
+        }
+    }
+}
+
+tasks.named("compileJava") {
+    dependsOn("verifyHytaleServerJar")
+}
+
+tasks.register("copyPluginJar", Copy) {
+    dependsOn("shadowJar")
+    from(layout.buildDirectory.dir("libs")) {
+        include("ninjatags-${version}.jar")
+    }
+    into(layout.projectDirectory.dir("dist"))
+}
+
+tasks.named("assemble") {
+    dependsOn("shadowJar")
+}
+
+tasks.named("build") {
+    dependsOn("copyPluginJar") // copyPluginJar already depends on shadowJar
+}
