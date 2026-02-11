@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,7 +39,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private static final int PAGE_SIZE = 5;
 
     private final CreditsService creditsService;
-    private final CreditConfig config;
+    private final Supplier<CreditConfig> configSupplier;
     private final Logger logger;
     private final CategoryShopLoader shopLoader;
 
@@ -46,15 +47,20 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private String selectedCategoryName;
     private int currentPage;
 
-    public HytaleCreditShopPage(PlayerRef playerRef, CreditsService creditsService, CreditConfig config, Logger logger) {
+    public HytaleCreditShopPage(PlayerRef playerRef,
+                                CreditsService creditsService,
+                                Supplier<CreditConfig> configSupplier,
+                                CategoryShopLoader shopLoader,
+                                Logger logger) {
         super(playerRef, CustomPageLifetime.CanDismiss);
         this.creditsService = creditsService;
-        this.config = config;
+        this.configSupplier = configSupplier;
+        this.shopLoader = shopLoader;
         this.logger = logger;
-        this.shopLoader = new CategoryShopLoader(logger);
         this.currentPage = 0;
 
-        for (CreditConfig.CategoryEntry category : config.categories()) {
+        CreditConfig activeConfig = currentConfig();
+        for (CreditConfig.CategoryEntry category : activeConfig.categories()) {
             shopLoader.ensureCategoryFile(category.key());
         }
     }
@@ -74,6 +80,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             return;
         }
 
+        CreditConfig config = currentConfig();
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
         String template = hasCategory ? ITEMS_TEMPLATE : EMPTY_TEMPLATE;
         uiCommandBuilder.append(template);
@@ -86,7 +93,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             uiCommandBuilder.set("#CreditsBalanceLabel.Text", config.currencyName() + ": " + balance);
         }
 
-        bindCategoryButtons(uiCommandBuilder, uiEventBuilder);
+        bindCategoryButtons(config, uiCommandBuilder, uiEventBuilder);
         bindCloseButton(uiEventBuilder);
 
         if (!hasCategory) {
@@ -95,10 +102,15 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         }
 
         uiCommandBuilder.set("#SelectedCategoryLabel.Text", selectedCategoryName == null ? "" : selectedCategoryName);
-        renderPagedItems(uiCommandBuilder, uiEventBuilder);
+        renderPagedItems(config, uiCommandBuilder, uiEventBuilder);
     }
 
-    private void bindCategoryButtons(UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
+    private CreditConfig currentConfig() {
+        CreditConfig cfg = configSupplier.get();
+        return cfg == null ? CreditConfig.defaults() : cfg;
+    }
+
+    private void bindCategoryButtons(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
         List<CreditConfig.CategoryEntry> categories = config.categories();
         for (int i = 0; i < MAX_CATEGORY_BUTTONS; i++) {
             int slot = i + 1;
@@ -125,7 +137,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         );
     }
 
-    private void renderPagedItems(UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
+    private void renderPagedItems(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
         Map<String, ShopItem> itemMap = shopLoader.loadCategoryItems(selectedCategoryKey);
         List<Map.Entry<String, ShopItem>> allItems = new ArrayList<>(itemMap.entrySet());
         int totalPages = Math.max(1, (int) Math.ceil(allItems.size() / (double) PAGE_SIZE));
@@ -221,6 +233,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     }
 
     private void handleCategorySelection(String selectedKey) {
+        CreditConfig config = currentConfig();
         CreditConfig.CategoryEntry selected = config.categories().stream()
                 .filter(category -> category.key().equalsIgnoreCase(selectedKey))
                 .findFirst()
@@ -247,6 +260,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             return;
         }
 
+        CreditConfig config = currentConfig();
         String categoryKey = parts[1];
         String itemId = parts[2];
 

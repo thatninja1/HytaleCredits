@@ -13,29 +13,35 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import dev.hytalemodding.creditsystem.CreditSystemPlugin;
+import dev.hytalemodding.creditsystem.config.CreditConfig;
 import dev.hytalemodding.creditsystem.service.CreditsService;
 
 import java.lang.reflect.Method;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 public final class CreditsCommand extends AbstractPlayerCommand {
     private final CreditSystemPlugin plugin;
     private final CreditsService creditsService;
-    private final String currencyName;
+    private final Supplier<CreditConfig> configSupplier;
     private final BooleanSupplier registrationSupplier;
 
-    public CreditsCommand(CreditSystemPlugin plugin, CreditsService creditsService, String currencyName, BooleanSupplier registrationSupplier) {
+    public CreditsCommand(CreditSystemPlugin plugin,
+                          CreditsService creditsService,
+                          Supplier<CreditConfig> configSupplier,
+                          BooleanSupplier registrationSupplier) {
         super("credits", "Check and manage credits balances");
         this.plugin = plugin;
         this.creditsService = creditsService;
-        this.currencyName = currencyName;
+        this.configSupplier = configSupplier;
         this.registrationSupplier = registrationSupplier;
         this.addAliases("credit");
 
-        addUsageVariant(new CreditsAdminActionVariant(creditsService, currencyName));
-        addUsageVariant(new CreditsInfoVariant(plugin, creditsService, currencyName, registrationSupplier));
+        addUsageVariant(new CreditsAdminActionVariant(creditsService, this::currencyName));
+        addUsageVariant(new CreditsInfoVariant(plugin, creditsService, this::currencyName, registrationSupplier));
     }
 
     @Override
@@ -43,11 +49,17 @@ public final class CreditsCommand extends AbstractPlayerCommand {
         sendHelpMenu(context, context.sender());
     }
 
+    private String currencyName() {
+        CreditConfig cfg = configSupplier.get();
+        return cfg == null ? "Credits" : cfg.currencyName();
+    }
+
     private static boolean canSeeAdminHelp(CommandSender sender) {
         return sender.hasPermission("creditsystem.admin")
                 || sender.hasPermission("creditsystem.credits.give")
                 || sender.hasPermission("creditsystem.credits.set")
-                || sender.hasPermission("creditsystem.credits.remove");
+                || sender.hasPermission("creditsystem.credits.remove")
+                || sender.hasPermission("creditsystem.credits.reload");
     }
 
     private static boolean hasAdmin(CommandSender sender, String subPermission) {
@@ -62,6 +74,7 @@ public final class CreditsCommand extends AbstractPlayerCommand {
             context.sendMessage(Message.raw("- /credits give <player> <amount>"));
             context.sendMessage(Message.raw("- /credits remove <player> <amount>"));
             context.sendMessage(Message.raw("- /credits set <player> <amount>"));
+            context.sendMessage(Message.raw("- /credits reload"));
         }
     }
 
@@ -102,16 +115,16 @@ public final class CreditsCommand extends AbstractPlayerCommand {
 
     private static final class CreditsAdminActionVariant extends CommandBase {
         private final CreditsService creditsService;
-        private final String currencyName;
+        private final Supplier<String> currencyNameSupplier;
 
         private final RequiredArg<String> actionArg;
         private final RequiredArg<PlayerRef> playerArg;
         private final RequiredArg<Integer> amountArg;
 
-        private CreditsAdminActionVariant(CreditsService creditsService, String currencyName) {
+        private CreditsAdminActionVariant(CreditsService creditsService, Supplier<String> currencyNameSupplier) {
             super("Admin credits commands");
             this.creditsService = creditsService;
-            this.currencyName = currencyName;
+            this.currencyNameSupplier = currencyNameSupplier;
             this.actionArg = withRequiredArg("action", "give|set|remove", ArgTypes.STRING);
             this.playerArg = withRequiredArg("player", "Target player", ArgTypes.PLAYER_REF);
             this.amountArg = withRequiredArg("amount", "Amount", ArgTypes.INTEGER);
@@ -123,6 +136,7 @@ public final class CreditsCommand extends AbstractPlayerCommand {
             PlayerRef target = context.get(playerArg);
             long amount = context.get(amountArg);
             CommandSender sender = context.sender();
+            String currencyName = currencyNameSupplier.get();
 
             if (!creditsService.isOnline()) {
                 context.sendMessage(Message.raw("Credits system unavailable."));
@@ -181,17 +195,20 @@ public final class CreditsCommand extends AbstractPlayerCommand {
     private static final class CreditsInfoVariant extends CommandBase {
         private final CreditSystemPlugin plugin;
         private final CreditsService creditsService;
-        private final String currencyName;
+        private final Supplier<String> currencyNameSupplier;
         private final BooleanSupplier registrationSupplier;
         private final RequiredArg<String> actionArg;
 
-        private CreditsInfoVariant(CreditSystemPlugin plugin, CreditsService creditsService, String currencyName, BooleanSupplier registrationSupplier) {
+        private CreditsInfoVariant(CreditSystemPlugin plugin,
+                                   CreditsService creditsService,
+                                   Supplier<String> currencyNameSupplier,
+                                   BooleanSupplier registrationSupplier) {
             super("Credits actions");
             this.plugin = plugin;
             this.creditsService = creditsService;
-            this.currencyName = currencyName;
+            this.currencyNameSupplier = currencyNameSupplier;
             this.registrationSupplier = registrationSupplier;
-            this.actionArg = withRequiredArg("action", "bal|balance|storage|debug", ArgTypes.STRING);
+            this.actionArg = withRequiredArg("action", "bal|balance|storage|debug|reload", ArgTypes.STRING);
         }
 
         @Override
@@ -213,7 +230,7 @@ public final class CreditsCommand extends AbstractPlayerCommand {
                     }
 
                     long balance = creditsService.getBalance(identity.uuid(), identity.username());
-                    context.sendMessage(Message.raw(currencyName + ": " + balance));
+                    context.sendMessage(Message.raw(currencyNameSupplier.get() + ": " + balance));
                 }
                 case "storage" -> {
                     if (!sender.hasPermission("creditsystem.admin")) {
@@ -236,7 +253,25 @@ public final class CreditsCommand extends AbstractPlayerCommand {
                     context.sendMessage(Message.raw("Commands registered: " + registrationSupplier.getAsBoolean()));
                     context.sendMessage(Message.raw("Last error: " + creditsService.lastError()));
                 }
-                default -> context.sendMessage(Message.raw("Usage: /credits bal | /credits balance | /credits storage | /credits debug"));
+                case "reload" -> {
+                    if (!(sender.hasPermission("creditsystem.admin") || sender.hasPermission("creditsystem.credits.reload"))) {
+                        context.sendMessage(Message.raw("You do not have permission."));
+                        return;
+                    }
+
+                    CreditSystemPlugin.ReloadResult reload = plugin.reloadPluginData();
+                    if (reload.success()) {
+                        context.sendMessage(Message.raw("[CreditSystem] Reloaded config.json and " + reload.loadedShopFiles() + " shop file(s)."));
+                    } else {
+                        context.sendMessage(Message.raw("[CreditSystem] Reload failed: " + reload.reason()));
+                        if (!reload.failures().isEmpty()) {
+                            for (Map.Entry<String, String> failure : reload.failures().entrySet()) {
+                                context.sendMessage(Message.raw(" - " + failure.getKey() + " -> " + failure.getValue()));
+                            }
+                        }
+                    }
+                }
+                default -> context.sendMessage(Message.raw("Usage: /credits bal | /credits balance | /credits storage | /credits debug | /credits reload"));
             }
         }
     }

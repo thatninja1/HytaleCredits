@@ -13,9 +13,11 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class CategoryShopLoader {
@@ -23,13 +25,15 @@ public final class CategoryShopLoader {
 
     private final Path shopDirectory;
     private final Logger logger;
+    private final Map<String, Map<String, ShopItem>> shopCache;
 
     public CategoryShopLoader(Logger logger) {
         this.logger = logger;
         this.shopDirectory = Path.of("plugins", "CreditSystem", "shops");
+        this.shopCache = new LinkedHashMap<>();
     }
 
-    public Path ensureCategoryFile(String categoryKey) {
+    public synchronized Path ensureCategoryFile(String categoryKey) {
         try {
             Files.createDirectories(shopDirectory);
             Path file = shopDirectory.resolve(categoryKey + ".json");
@@ -64,10 +68,56 @@ public final class CategoryShopLoader {
         }
     }
 
-    public Map<String, ShopItem> loadCategoryItems(String categoryKey) {
+    public synchronized Map<String, ShopItem> loadCategoryItems(String categoryKey) {
+        Map<String, ShopItem> cached = shopCache.get(categoryKey.toLowerCase());
+        if (cached != null) {
+            return cached;
+        }
+
         Path file = ensureCategoryFile(categoryKey);
         logger.info("[CreditSystem] Loading shop file for category=" + categoryKey + " path=" + file.toAbsolutePath());
 
+        try {
+            Map<String, ShopItem> parsed = parseShopFile(file);
+            Map<String, ShopItem> immutableCopy = Map.copyOf(parsed);
+            shopCache.put(categoryKey.toLowerCase(), immutableCopy);
+            return immutableCopy;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to parse shop file for " + categoryKey + ": " + file.toAbsolutePath(), e);
+            if (cached != null) {
+                return cached;
+            }
+            throw new IllegalStateException("Failed to parse shop file for " + categoryKey + ": " + file.toAbsolutePath(), e);
+        }
+    }
+
+    public synchronized ReloadReport reloadAllShops(Collection<String> categoryKeys) {
+        int successCount = 0;
+        Map<String, String> failures = new LinkedHashMap<>();
+
+        for (String rawKey : categoryKeys) {
+            if (rawKey == null || rawKey.isBlank()) {
+                continue;
+            }
+
+            String key = rawKey.toLowerCase();
+            Path file = ensureCategoryFile(key);
+            try {
+                Map<String, ShopItem> parsed = parseShopFile(file);
+                shopCache.put(key, Map.copyOf(parsed));
+                successCount++;
+            } catch (Exception parseError) {
+                String reason = parseError.getMessage() == null ? "unknown parse error" : parseError.getMessage();
+                failures.put(file.toAbsolutePath().toString(), reason);
+                logger.log(Level.WARNING, "[CreditSystem] Shop reload failed for " + file.toAbsolutePath()
+                        + ". Keeping previous cached version if available.", parseError);
+            }
+        }
+
+        return new ReloadReport(successCount, failures);
+    }
+
+    private Map<String, ShopItem> parseShopFile(Path file) throws IOException {
         try (Reader reader = Files.newBufferedReader(file)) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
             Map<String, ShopItem> items = new LinkedHashMap<>();
@@ -95,8 +145,9 @@ public final class CategoryShopLoader {
                 items.put(entry.getKey(), new ShopItem(name, Math.max(0L, price), description, commands));
             }
             return items;
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to parse shop file for " + categoryKey + ": " + file.toAbsolutePath(), e);
         }
+    }
+
+    public record ReloadReport(int successfulFiles, Map<String, String> failures) {
     }
 }

@@ -11,11 +11,14 @@ import dev.hytalemodding.creditsystem.platform.HytaleCommandBridge;
 import dev.hytalemodding.creditsystem.platform.HytalePlatformBridge;
 import dev.hytalemodding.creditsystem.platform.NoopHytalePlatformBridge;
 import dev.hytalemodding.creditsystem.service.CreditsService;
+import dev.hytalemodding.creditsystem.shop.CategoryShopLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,9 +28,10 @@ import java.util.logging.Logger;
 public final class CreditSystemPlugin extends JavaPlugin {
     private final Logger logger = Logger.getLogger("CreditSystem");
 
-    private CreditConfig config;
+    private volatile CreditConfig config;
     private CreditsService creditsService;
     private HytalePlatformBridge platformBridge;
+    private CategoryShopLoader shopLoader;
 
     public CreditSystemPlugin(JavaPluginInit init) {
         super(init);
@@ -46,6 +50,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
     public void onEnable() {
         logger.info("[CreditSystem] Enabling...");
         this.creditsService = new CreditsService();
+        this.shopLoader = new CategoryShopLoader(logger);
 
         try {
             Files.createDirectories(Path.of("plugins", "CreditSystem"));
@@ -58,8 +63,10 @@ public final class CreditSystemPlugin extends JavaPlugin {
                         new Object[]{creditsService.backendName(), creditsService.location()});
             }
 
+            preloadShopFiles(config);
+
             logger.info("[CreditSystem] Registering commands...");
-            this.platformBridge = new HytaleCommandBridge(this, logger, creditsService);
+            this.platformBridge = new HytaleCommandBridge(this, logger, creditsService, shopLoader);
 
             try {
                 platformBridge.registerCreditsCommands(new CreditsCommandCollection(creditsService, config.currencyName()));
@@ -118,6 +125,38 @@ public final class CreditSystemPlugin extends JavaPlugin {
         }
     }
 
+    private void preloadShopFiles(CreditConfig loadedConfig) {
+        for (CreditConfig.CategoryEntry category : loadedConfig.categories()) {
+            shopLoader.ensureCategoryFile(category.key());
+            shopLoader.loadCategoryItems(category.key());
+        }
+    }
+
+    public synchronized ReloadResult reloadPluginData() {
+        try {
+            CreditConfig oldConfig = this.config;
+            CreditConfig newConfig = CreditConfig.loadDefault(logger);
+            List<String> categoryKeys = newConfig.categories().stream().map(CreditConfig.CategoryEntry::key).toList();
+            CategoryShopLoader.ReloadReport report = shopLoader.reloadAllShops(categoryKeys);
+
+            this.config = newConfig;
+
+            if (!report.failures().isEmpty()) {
+                String firstError = report.failures().entrySet().iterator().next().getKey() + " -> "
+                        + report.failures().entrySet().iterator().next().getValue();
+                logger.warning("[CreditSystem] Reload completed with shop file errors: " + report.failures());
+                return new ReloadResult(false, report.successfulFiles(), report.failures(),
+                        "One or more shop files failed to parse. Example: " + firstError);
+            }
+
+            logger.info("[CreditSystem] Reload successful. Config and shops refreshed.");
+            return new ReloadResult(true, report.successfulFiles(), Map.of(), "none");
+        } catch (Exception reloadError) {
+            logger.log(Level.SEVERE, "[CreditSystem] Reload failed", reloadError);
+            return new ReloadResult(false, 0, Map.of(), reloadError.getMessage() == null ? "unknown" : reloadError.getMessage());
+        }
+    }
+
     public void onDisable() {
         if (creditsService != null) {
             creditsService.shutdown();
@@ -133,7 +172,18 @@ public final class CreditSystemPlugin extends JavaPlugin {
         return creditsService;
     }
 
+    public CategoryShopLoader getShopLoader() {
+        return shopLoader;
+    }
+
+    public String currencyName() {
+        return config == null ? "Credits" : config.currencyName();
+    }
+
     public boolean didRegisterCommands() {
         return platformBridge != null && platformBridge.commandsRegistered();
+    }
+
+    public record ReloadResult(boolean success, int loadedShopFiles, Map<String, String> failures, String reason) {
     }
 }
