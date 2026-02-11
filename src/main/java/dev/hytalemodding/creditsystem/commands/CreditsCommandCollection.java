@@ -14,6 +14,10 @@ public final class CreditsCommandCollection {
         this.currencyName = currencyName;
     }
 
+    public String currencyName() {
+        return currencyName;
+    }
+
     public void executeBalance(CommandSender sender, PlayerRef self) {
         if (!sender.isPlayer()) {
             sender.sendMessage("Only players can run /credits without arguments.");

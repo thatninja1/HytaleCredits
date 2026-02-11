@@ -10,6 +10,7 @@ import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import dev.hytalemodding.creditsystem.CreditSystemPlugin;
 import dev.hytalemodding.creditsystem.commands.CreditShopCommand;
+import dev.hytalemodding.creditsystem.commands.CreditShopOpenCommand;
 import dev.hytalemodding.creditsystem.commands.CreditsCommandCollection;
 import dev.hytalemodding.creditsystem.service.CreditsService;
 
@@ -27,16 +28,16 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
     }
 
     @Override
-    public void registerCreditsCommands(CreditsCommandCollection ignored) {
+    public void registerCreditsCommands(CreditsCommandCollection collection) {
         CommandRegistry registry = plugin.getCommandRegistry();
-        registry.registerCommand(new CreditsRootCommand(plugin, creditsService, this::commandsRegistered));
+        registry.registerCommand(new CreditsRootCommand(plugin, creditsService, collection.currencyName(), this::commandsRegistered));
         this.commandsRegistered = true;
     }
 
     @Override
     public void registerCreditShopCommand(CreditShopCommand command) {
         CommandRegistry registry = plugin.getCommandRegistry();
-        registry.registerCommand(new CreditShopRootCommand(command, creditsService));
+        registry.registerCommand(new CreditShopOpenCommand(command.creditsService(), command.config(), command.logger()));
     }
 
     @Override
@@ -48,19 +49,28 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
         return sender.hasPermission("creditsystem.admin") || sender.hasPermission(subPermission);
     }
 
+    private static boolean canSeeAdminHelp(CommandSender sender) {
+        return sender.hasPermission("creditsystem.admin")
+                || sender.hasPermission("creditsystem.credits.give")
+                || sender.hasPermission("creditsystem.credits.set")
+                || sender.hasPermission("creditsystem.credits.remove");
+    }
+
     private static final class CreditsRootCommand extends CommandBase {
         private final CreditSystemPlugin plugin;
         private final CreditsService creditsService;
+        private final String currencyName;
         private final java.util.function.BooleanSupplier registrationSupplier;
 
         private final OptionalArg<String> actionArg;
         private final OptionalArg<PlayerRef> targetArg;
         private final OptionalArg<Integer> amountArg;
 
-        private CreditsRootCommand(CreditSystemPlugin plugin, CreditsService creditsService, java.util.function.BooleanSupplier registrationSupplier) {
+        private CreditsRootCommand(CreditSystemPlugin plugin, CreditsService creditsService, String currencyName, java.util.function.BooleanSupplier registrationSupplier) {
             super("credits", "Check and manage credits balances");
             this.plugin = plugin;
             this.creditsService = creditsService;
+            this.currencyName = currencyName;
             this.registrationSupplier = registrationSupplier;
             this.addAliases("credit");
 
@@ -84,7 +94,10 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
                     return;
                 }
                 long balance = creditsService.getBalance(sender.getUuid(), sender.getDisplayName());
-                context.sendMessage(Message.raw("Credits: " + balance));
+                context.sendMessage(Message.raw(currencyName + ": " + balance));
+                if (canSeeAdminHelp(sender)) {
+                    context.sendMessage(Message.raw("Admin: /credits give <player> <amount> | /credits set <player> <amount> | /credits remove <player> <amount>"));
+                }
                 return;
             }
 
@@ -118,12 +131,13 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
                 return;
             }
 
-            if (!context.provided(targetArg)) {
-                context.sendMessage(Message.raw("Target player must be online."));
+            if (!action.equals("give") && !action.equals("set") && !action.equals("remove")) {
+                context.sendMessage(Message.raw("Usage: /credits give <player> <amount> | /credits set <player> <amount> | /credits remove <player> <amount>"));
                 return;
             }
-            if (!context.provided(amountArg)) {
-                context.sendMessage(Message.raw("Usage: /credits give|set|remove <player> <amount>"));
+
+            if (!context.provided(targetArg) || !context.provided(amountArg)) {
+                context.sendMessage(Message.raw("Usage: /credits give <player> <amount> | /credits set <player> <amount> | /credits remove <player> <amount>"));
                 return;
             }
 
@@ -146,7 +160,7 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
                     }
                     creditsService.give(target.getUuid(), target.getUsername(), amount);
                     long balance = creditsService.getBalance(target.getUuid(), target.getUsername());
-                    context.sendMessage(Message.raw("Gave " + amount + " Credits to " + target.getUsername() + ". New balance: " + balance));
+                    context.sendMessage(Message.raw("Gave " + amount + " " + currencyName + " to " + target.getUsername() + ". New balance: " + balance));
                 }
                 case "set" -> {
                     if (!hasAdmin(sender, "creditsystem.credits.set")) {
@@ -158,7 +172,7 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
                         return;
                     }
                     creditsService.set(target.getUuid(), target.getUsername(), amount);
-                    context.sendMessage(Message.raw("Set " + target.getUsername() + " Credits to " + amount + "."));
+                    context.sendMessage(Message.raw("Set " + target.getUsername() + " " + currencyName + " to " + amount + "."));
                 }
                 case "remove" -> {
                     if (!hasAdmin(sender, "creditsystem.credits.remove")) {
@@ -171,43 +185,10 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
                     }
                     creditsService.remove(target.getUuid(), target.getUsername(), amount);
                     long balance = creditsService.getBalance(target.getUuid(), target.getUsername());
-                    context.sendMessage(Message.raw("Removed " + amount + " Credits from " + target.getUsername() + ". New balance: " + balance));
+                    context.sendMessage(Message.raw("Removed " + amount + " " + currencyName + " from " + target.getUsername() + ". New balance: " + balance));
                 }
-                default -> context.sendMessage(Message.raw("Usage: /credits [give|set|remove|debug|storage]"));
+                default -> context.sendMessage(Message.raw("Usage: /credits give <player> <amount> | /credits set <player> <amount> | /credits remove <player> <amount>"));
             }
-        }
-    }
-
-    private static final class CreditShopRootCommand extends CommandBase {
-        private final CreditShopCommand creditShopCommand;
-        private final CreditsService creditsService;
-
-        private CreditShopRootCommand(CreditShopCommand creditShopCommand, CreditsService creditsService) {
-            super("creditshop", "Open the credit shop");
-            this.creditShopCommand = creditShopCommand;
-            this.creditsService = creditsService;
-            this.addAliases("cshop");
-        }
-
-        @Override
-        protected void executeSync(CommandContext context) {
-            if (!context.isPlayer()) {
-                context.sendMessage(Message.raw("Only players can run this command."));
-                return;
-            }
-
-            if (!creditsService.isOnline()) {
-                context.sendMessage(Message.raw("Credits system unavailable."));
-                return;
-            }
-
-            // Runtime UI opening should be attached here with your live CustomUIPage implementation.
-            creditShopCommand.createPage(new dev.hytalemodding.creditsystem.commands.PlayerRef(
-                    context.sender().getUuid(),
-                    context.sender().getDisplayName(),
-                    true
-            ));
-            context.sendMessage(Message.raw("Credit shop opened."));
         }
     }
 }

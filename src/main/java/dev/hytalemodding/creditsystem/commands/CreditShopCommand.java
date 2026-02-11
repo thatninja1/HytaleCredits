@@ -2,7 +2,6 @@ package dev.hytalemodding.creditsystem.commands;
 
 import dev.hytalemodding.creditsystem.config.CreditConfig;
 import dev.hytalemodding.creditsystem.service.CreditsService;
-import dev.hytalemodding.creditsystem.ui.CreditShopPage;
 
 import java.util.logging.Logger;
 
@@ -17,7 +16,15 @@ public final class CreditShopCommand {
         this.logger = logger;
     }
 
-    public CreditShopPage createPage(PlayerRef playerRef) {
-        return new CreditShopPage(playerRef, creditsService, config, logger);
+    public CreditsService creditsService() {
+        return creditsService;
+    }
+
+    public CreditConfig config() {
+        return config;
+    }
+
+    public Logger logger() {
+        return logger;
     }
 }
