@@ -58,7 +58,7 @@ Group #Root {
             Background: #1E293B(0.90);
             Label #ItemCard1Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard1Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard1Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Label #ItemCard1Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
             Button #ItemCard1Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard1BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
@@ -67,7 +67,7 @@ Group #Root {
             Background: #1E293B(0.90);
             Label #ItemCard2Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard2Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard2Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Label #ItemCard2Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
             Button #ItemCard2Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard2BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
@@ -76,7 +76,7 @@ Group #Root {
             Background: #1E293B(0.90);
             Label #ItemCard3Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard3Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard3Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Label #ItemCard3Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
             Button #ItemCard3Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard3BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
@@ -85,7 +85,7 @@ Group #Root {
             Background: #1E293B(0.90);
             Label #ItemCard4Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard4Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard4Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Label #ItemCard4Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
             Button #ItemCard4Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard4BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
@@ -94,7 +94,7 @@ Group #Root {
             Background: #1E293B(0.90);
             Label #ItemCard5Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard5Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard5Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Label #ItemCard5Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
             Button #ItemCard5Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard5BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
         }

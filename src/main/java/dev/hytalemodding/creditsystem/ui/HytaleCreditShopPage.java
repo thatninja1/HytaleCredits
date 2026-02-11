@@ -155,7 +155,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                 ShopItem item = entry.getValue();
                 uiCommandBuilder.set("#ItemCard" + card + "Name.Text", item.name());
                 uiCommandBuilder.set("#ItemCard" + card + "Price.Text", item.price() + " " + config.currencyName());
-                uiCommandBuilder.set("#ItemCard" + card + "Desc.Text", item.description() == null ? "" : item.description());
+                uiCommandBuilder.set("#ItemCard" + card + "Desc.Text", wrapForUi(item.description(), 22, 6));
                 uiCommandBuilder.set("#ItemCard" + card + "BuyLabel.Text", "Buy");
                 uiEventBuilder.addEventBinding(
                         CustomUIEventBindingType.Activating,
@@ -308,6 +308,95 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         uiCommandBuilder.set("#ItemCard" + slot + "Price.Text", "");
         uiCommandBuilder.set("#ItemCard" + slot + "Desc.Text", "");
         uiCommandBuilder.set("#ItemCard" + slot + "BuyLabel.Text", "");
+    }
+
+    private String wrapForUi(String text, int maxCharsPerLine, int maxLines) {
+        if (text == null || text.isBlank() || maxCharsPerLine <= 0 || maxLines <= 0) {
+            return "";
+        }
+
+        String normalized = text.replace("\r\n", "\n").replace('\r', '\n').trim();
+        if (normalized.isEmpty()) {
+            return "";
+        }
+
+        String[] words = normalized.replace('\n', ' ').trim().split("\\s+");
+        List<String> lines = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int index = 0;
+        boolean truncated = false;
+
+        while (index < words.length) {
+            String word = words[index];
+            if (word.isEmpty()) {
+                index++;
+                continue;
+            }
+
+            if (word.length() > maxCharsPerLine) {
+                if (current.length() > 0) {
+                    lines.add(current.toString());
+                    if (lines.size() == maxLines) {
+                        truncated = true;
+                        break;
+                    }
+                    current.setLength(0);
+                }
+
+                int start = 0;
+                while (start < word.length()) {
+                    int stop = Math.min(start + maxCharsPerLine, word.length());
+                    lines.add(word.substring(start, stop));
+                    if (lines.size() == maxLines) {
+                        truncated = stop < word.length() || index < words.length - 1;
+                        break;
+                    }
+                    start = stop;
+                }
+
+                if (truncated || lines.size() == maxLines) {
+                    break;
+                }
+
+                index++;
+                continue;
+            }
+
+            if (current.length() == 0) {
+                current.append(word);
+            } else if (current.length() + 1 + word.length() <= maxCharsPerLine) {
+                current.append(' ').append(word);
+            } else {
+                lines.add(current.toString());
+                if (lines.size() == maxLines) {
+                    truncated = true;
+                    break;
+                }
+                current.setLength(0);
+                current.append(word);
+            }
+            index++;
+        }
+
+        if (!truncated && current.length() > 0 && lines.size() < maxLines) {
+            lines.add(current.toString());
+        }
+
+        if (lines.isEmpty()) {
+            return "";
+        }
+
+        if (truncated) {
+            int lastIndex = lines.size() - 1;
+            String last = lines.get(lastIndex);
+            int keep = Math.max(0, maxCharsPerLine - 3);
+            if (last.length() > keep) {
+                last = last.substring(0, keep);
+            }
+            lines.set(lastIndex, last + "...");
+        }
+
+        return String.join("\n", lines);
     }
 
     private String extractAction(String eventData) {
