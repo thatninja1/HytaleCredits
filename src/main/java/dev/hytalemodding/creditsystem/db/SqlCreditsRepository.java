@@ -137,6 +137,12 @@ public final class SqlCreditsRepository {
     }
 
     private Connection openConnection() throws SQLException {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("MySQL JDBC driver class not found", e);
+        }
+
         Properties props = new Properties();
         props.setProperty("user", databaseSettings.username());
         props.setProperty("password", databaseSettings.password());
