@@ -1,5 +1,7 @@
 package dev.hytalemodding.creditsystem;
 
+import com.hypixel.hytale.server.core.plugin.JavaPlugin;
+import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import dev.hytalemodding.creditsystem.commands.CreditShopCommand;
 import dev.hytalemodding.creditsystem.commands.CreditsCommandCollection;
 import dev.hytalemodding.creditsystem.config.CreditConfig;
@@ -13,19 +15,29 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * CreditSystem plugin entrypoint.
- *
- * <p>This class keeps framework coupling minimal so the project can compile in environments
- * where only API stubs are available. A concrete runtime bridge should call {@link #onEnable()}
- * and {@link #onDisable()} from the server lifecycle.</p>
+ * Main plugin class loaded by Hytale's Java plugin loader.
  */
-public final class CreditSystemPlugin {
+public final class CreditSystemPlugin extends JavaPlugin {
     private final Logger logger = Logger.getLogger("CreditSystem");
 
     private CreditConfig config;
     private SqlCreditsRepository repository;
     private CreditsService creditsService;
     private HytalePlatformBridge platformBridge;
+
+    public CreditSystemPlugin(JavaPluginInit init) {
+        super(init);
+    }
+
+    @Override
+    protected void start() {
+        onEnable();
+    }
+
+    @Override
+    protected void shutdown() {
+        onDisable();
+    }
 
     public void onEnable() {
         try {
@@ -38,7 +50,7 @@ public final class CreditSystemPlugin {
             platformBridge.registerCreditsCommands(new CreditsCommandCollection(creditsService, config.currencyName()));
             platformBridge.registerCreditShopCommand(new CreditShopCommand(creditsService, config, logger));
 
-            logger.info("CreditSystem enabled.");
+            logger.log(Level.INFO, "CreditSystem enabled.");
         } catch (IOException | SQLException e) {
             logger.log(Level.SEVERE, "Failed to enable CreditSystem", e);
             throw new IllegalStateException("CreditSystem startup failed", e);
@@ -49,10 +61,10 @@ public final class CreditSystemPlugin {
         if (repository != null) {
             repository.close();
         }
-        logger.info("CreditSystem disabled.");
+        logger.log(Level.INFO, "CreditSystem disabled.");
     }
 
-    public CreditConfig getConfig() {
+    public CreditConfig getCreditConfig() {
         return config;
     }
 
