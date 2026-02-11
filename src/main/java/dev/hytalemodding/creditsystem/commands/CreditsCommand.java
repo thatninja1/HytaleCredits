@@ -70,7 +70,7 @@ public final class CreditsCommand extends AbstractPlayerCommand {
         private final RequiredArg<Integer> amountArg;
 
         private CreditsAdminActionVariant(CreditsService creditsService, String currencyName) {
-            super("credits", "Admin credits commands", true);
+            super("Admin credits commands");
             this.creditsService = creditsService;
             this.currencyName = currencyName;
             this.actionArg = withRequiredArg("action", "give|set|remove", ArgTypes.STRING);
@@ -146,7 +146,7 @@ public final class CreditsCommand extends AbstractPlayerCommand {
         private final RequiredArg<String> actionArg;
 
         private CreditsInfoVariant(CreditSystemPlugin plugin, CreditsService creditsService, BooleanSupplier registrationSupplier) {
-            super("credits", "Credits debug/storage", true);
+            super("Credits debug/storage");
             this.plugin = plugin;
             this.creditsService = creditsService;
             this.registrationSupplier = registrationSupplier;
