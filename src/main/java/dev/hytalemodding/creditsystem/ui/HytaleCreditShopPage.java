@@ -140,6 +140,10 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private void renderPagedItems(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
         Map<String, ShopItem> itemMap = shopLoader.loadCategoryItems(selectedCategoryKey);
         List<Map.Entry<String, ShopItem>> allItems = new ArrayList<>(itemMap.entrySet());
+        if (config.debug()) {
+            String order = String.join(", ", allItems.stream().map(Map.Entry::getKey).toList());
+            logger.info("[CreditSystem] Loaded shop order for " + selectedCategoryKey + ": " + order);
+        }
         int totalPages = Math.max(1, (int) Math.ceil(allItems.size() / (double) PAGE_SIZE));
         currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
         int start = currentPage * PAGE_SIZE;

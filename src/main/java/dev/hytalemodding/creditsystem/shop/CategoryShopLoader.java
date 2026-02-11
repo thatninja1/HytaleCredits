@@ -14,14 +14,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class CategoryShopLoader {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Pattern ITEM_NUMERIC_KEY = Pattern.compile("^item(\\d+)$", Pattern.CASE_INSENSITIVE);
 
     private final Path shopDirectory;
     private final Logger logger;
@@ -69,25 +74,26 @@ public final class CategoryShopLoader {
     }
 
     public synchronized Map<String, ShopItem> loadCategoryItems(String categoryKey) {
-        Map<String, ShopItem> cached = shopCache.get(categoryKey.toLowerCase());
+        String normalized = normalizeKey(categoryKey);
+        Map<String, ShopItem> cached = shopCache.get(normalized);
         if (cached != null) {
             return cached;
         }
 
-        Path file = ensureCategoryFile(categoryKey);
-        logger.info("[CreditSystem] Loading shop file for category=" + categoryKey + " path=" + file.toAbsolutePath());
+        Path file = ensureCategoryFile(normalized);
+        logger.info("[CreditSystem] Loading shop file for category=" + normalized + " path=" + file.toAbsolutePath());
 
         try {
             Map<String, ShopItem> parsed = parseShopFile(file);
-            Map<String, ShopItem> immutableCopy = Map.copyOf(parsed);
-            shopCache.put(categoryKey.toLowerCase(), immutableCopy);
-            return immutableCopy;
+            Map<String, ShopItem> immutableOrdered = Collections.unmodifiableMap(new LinkedHashMap<>(parsed));
+            shopCache.put(normalized, immutableOrdered);
+            return immutableOrdered;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to parse shop file for " + categoryKey + ": " + file.toAbsolutePath(), e);
+            logger.log(Level.SEVERE, "Failed to parse shop file for " + normalized + ": " + file.toAbsolutePath(), e);
             if (cached != null) {
                 return cached;
             }
-            throw new IllegalStateException("Failed to parse shop file for " + categoryKey + ": " + file.toAbsolutePath(), e);
+            throw new IllegalStateException("Failed to parse shop file for " + normalized + ": " + file.toAbsolutePath(), e);
         }
     }
 
@@ -100,11 +106,11 @@ public final class CategoryShopLoader {
                 continue;
             }
 
-            String key = rawKey.toLowerCase();
+            String key = normalizeKey(rawKey);
             Path file = ensureCategoryFile(key);
             try {
                 Map<String, ShopItem> parsed = parseShopFile(file);
-                shopCache.put(key, Map.copyOf(parsed));
+                shopCache.put(key, Collections.unmodifiableMap(new LinkedHashMap<>(parsed)));
                 successCount++;
             } catch (Exception parseError) {
                 String reason = parseError.getMessage() == null ? "unknown parse error" : parseError.getMessage();
@@ -120,14 +126,20 @@ public final class CategoryShopLoader {
     private Map<String, ShopItem> parseShopFile(Path file) throws IOException {
         try (Reader reader = Files.newBufferedReader(file)) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            Map<String, ShopItem> items = new LinkedHashMap<>();
+
+            List<OrderedItem> numeric = new ArrayList<>();
+            List<OrderedItem> nonNumeric = new ArrayList<>();
+            int originalIndex = 0;
+
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
                 if (!entry.getValue().isJsonObject()) {
+                    originalIndex++;
                     continue;
                 }
 
+                String itemId = entry.getKey();
                 JsonObject obj = entry.getValue().getAsJsonObject();
-                String name = obj.has("name") ? obj.get("name").getAsString() : entry.getKey();
+                String name = obj.has("name") ? obj.get("name").getAsString() : itemId;
                 long price = obj.has("price") ? obj.get("price").getAsLong() : 0L;
                 String description = obj.has("description") ? obj.get("description").getAsString() : "";
 
@@ -142,10 +154,42 @@ public final class CategoryShopLoader {
                     commands.add(obj.get("command").getAsString());
                 }
 
-                items.put(entry.getKey(), new ShopItem(name, Math.max(0L, price), description, commands));
+                ShopItem shopItem = new ShopItem(name, Math.max(0L, price), description, commands);
+                Matcher matcher = ITEM_NUMERIC_KEY.matcher(itemId);
+                if (matcher.matches()) {
+                    int numericSuffix = Integer.parseInt(matcher.group(1));
+                    numeric.add(new OrderedItem(itemId, shopItem, originalIndex, numericSuffix));
+                } else {
+                    nonNumeric.add(new OrderedItem(itemId, shopItem, originalIndex, Integer.MAX_VALUE));
+                }
+                originalIndex++;
             }
-            return items;
+
+            numeric.sort((a, b) -> {
+                int byNumber = Integer.compare(a.numericSuffix(), b.numericSuffix());
+                if (byNumber != 0) {
+                    return byNumber;
+                }
+                return Integer.compare(a.originalIndex(), b.originalIndex());
+            });
+            nonNumeric.sort((a, b) -> Integer.compare(a.originalIndex(), b.originalIndex()));
+
+            Map<String, ShopItem> ordered = new LinkedHashMap<>();
+            for (OrderedItem item : numeric) {
+                ordered.put(item.itemId(), item.shopItem());
+            }
+            for (OrderedItem item : nonNumeric) {
+                ordered.put(item.itemId(), item.shopItem());
+            }
+            return ordered;
         }
+    }
+
+    private String normalizeKey(String key) {
+        return Objects.requireNonNullElse(key, "").toLowerCase();
+    }
+
+    private record OrderedItem(String itemId, ShopItem shopItem, int originalIndex, int numericSuffix) {
     }
 
     public record ReloadReport(int successfulFiles, Map<String, String> failures) {
