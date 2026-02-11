@@ -11,6 +11,8 @@ public interface CreditsRepository {
 
     void setCredits(UUID uuid, String name, long amount);
 
+    boolean tryPurchase(UUID uuid, String name, long price);
+
     void initialize();
 
     void shutdown();

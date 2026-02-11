@@ -5,6 +5,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 import dev.hytalemodding.creditsystem.config.CreditConfig;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -93,6 +94,27 @@ public final class MongoCreditsRepository implements CreditsRepository {
                         .append("updatedAt", new Date())),
                 new UpdateOptions().upsert(true)
         );
+    }
+
+
+    @Override
+    public boolean tryPurchase(UUID uuid, String name, long price) {
+        if (price <= 0) {
+            return true;
+        }
+
+        Bson filter = Filters.and(
+                Filters.eq("uuid", uuid.toString()),
+                Filters.gte("balance", price)
+        );
+
+        UpdateResult result = collection.updateOne(
+                filter,
+                new Document("$set", new Document("name", name).append("updatedAt", new Date()))
+                        .append("$inc", new Document("balance", -price)),
+                new UpdateOptions().upsert(false)
+        );
+        return result.getModifiedCount() > 0;
     }
 
     @Override

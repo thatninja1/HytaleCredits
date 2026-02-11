@@ -71,4 +71,15 @@ public final class H2CreditsRepository extends JdbcCreditsRepository {
                     updated_at = CURRENT_TIMESTAMP
                 """;
     }
+    @Override
+    protected String purchaseSql() {
+        return """
+                UPDATE credits
+                SET player_name = ?,
+                    balance = balance - ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE player_uuid = ? AND balance >= ?
+                """;
+    }
+
 }

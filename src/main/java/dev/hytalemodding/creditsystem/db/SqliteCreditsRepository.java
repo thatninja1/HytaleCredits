@@ -65,4 +65,15 @@ public final class SqliteCreditsRepository extends JdbcCreditsRepository {
                     updated_at = strftime('%s','now')
                 """;
     }
+    @Override
+    protected String purchaseSql() {
+        return """
+                UPDATE credits
+                SET player_name = ?,
+                    balance = balance - ?,
+                    updated_at = strftime('%s','now')
+                WHERE player_uuid = ? AND balance >= ?
+                """;
+    }
+
 }

@@ -81,6 +81,26 @@ public abstract class JdbcCreditsRepository implements CreditsRepository {
     }
 
     @Override
+    public boolean tryPurchase(UUID uuid, String name, long price) {
+        if (price <= 0) {
+            return true;
+        }
+
+        executeEnsure(uuid, name);
+        try (Connection connection = openConnection();
+             PreparedStatement statement = connection.prepareStatement(purchaseSql())) {
+            statement.setString(1, name);
+            statement.setLong(2, price);
+            statement.setString(3, uuid.toString());
+            statement.setLong(4, price);
+            int updated = statement.executeUpdate();
+            return updated > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to execute purchase", e);
+        }
+    }
+
+    @Override
     public void shutdown() {
         // DriverManager connection handling, nothing to close.
     }
@@ -104,6 +124,8 @@ public abstract class JdbcCreditsRepository implements CreditsRepository {
     protected abstract String removeSql();
 
     protected abstract String setSql();
+
+    protected abstract String purchaseSql();
 
     private void executeEnsure(UUID uuid, String name) {
         try (Connection connection = openConnection();

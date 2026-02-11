@@ -1,10 +1,13 @@
 package dev.hytalemodding.creditsystem.ui;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.CustomUIPage;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
@@ -13,9 +16,14 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import dev.hytalemodding.creditsystem.config.CreditConfig;
 import dev.hytalemodding.creditsystem.service.CreditsService;
+import dev.hytalemodding.creditsystem.shop.CategoryShopLoader;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,12 +31,15 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private static final String UI_TEMPLATE = "Pages/Credits/CreditShop.ui";
     private static final String UI_RESOURCE_PATH = "Common/UI/Custom/Pages/Credits/CreditShop.ui";
     private static final int MAX_CATEGORY_BUTTONS = 12;
+    private static final int MAX_ITEM_BUTTONS = 12;
 
     private final CreditsService creditsService;
     private final CreditConfig config;
     private final Logger logger;
+    private final CategoryShopLoader shopLoader;
 
-    private String activeTitle;
+    private String selectedCategoryKey;
+    private String selectedCategoryName;
     private String contentText;
 
     public HytaleCreditShopPage(PlayerRef playerRef, CreditsService creditsService, CreditConfig config, Logger logger) {
@@ -36,7 +47,12 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         this.creditsService = creditsService;
         this.config = config;
         this.logger = logger;
-        this.activeTitle = config.ui().title();
+        this.shopLoader = new CategoryShopLoader(logger);
+        for (CreditConfig.CategoryEntry category : config.categories()) {
+            shopLoader.ensureCategoryFile(category.key());
+        }
+        this.selectedCategoryKey = null;
+        this.selectedCategoryName = "";
         this.contentText = "Select a category.";
     }
 
@@ -67,13 +83,15 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         uiCommandBuilder.append(UI_TEMPLATE);
         logger.info("[CreditSystem] Credit shop UI append succeeded for " + playerRef.getUsername());
 
-        uiCommandBuilder.set("#TitleLabel.Text", activeTitle);
+        uiCommandBuilder.set("#TitleLabel.Text", config.ui().title());
         if (!creditsService.isOnline()) {
             uiCommandBuilder.set("#CreditsBalanceLabel.Text", "Credits system unavailable");
         } else {
             long balance = creditsService.getBalance(playerRef.getUuid(), playerRef.getUsername());
             uiCommandBuilder.set("#CreditsBalanceLabel.Text", config.currencyName() + ": " + balance);
         }
+
+        uiCommandBuilder.set("#SelectedCategoryLabel.Text", selectedCategoryName == null ? "" : selectedCategoryName);
         uiCommandBuilder.set("#CategoryContentLabel.Text", contentText);
 
         List<CreditConfig.CategoryEntry> categories = config.categories();
@@ -93,6 +111,27 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             }
         }
 
+        Map<String, CategoryShopLoader.ShopItem> itemMap = loadSelectedCategoryItems();
+        int index = 0;
+        for (Map.Entry<String, CategoryShopLoader.ShopItem> entry : itemMap.entrySet()) {
+            if (index >= MAX_ITEM_BUTTONS) {
+                break;
+            }
+            int slot = index + 1;
+            CategoryShopLoader.ShopItem item = entry.getValue();
+            uiCommandBuilder.set("#ItemButton" + slot + "Label.Text", item.name() + " - " + item.price() + " " + config.currencyName());
+            uiEventBuilder.addEventBinding(
+                    CustomUIEventBindingType.Activating,
+                    "#ItemButton" + slot,
+                    EventData.of("action", "buy:" + selectedCategoryKey + ":" + entry.getKey())
+            );
+            index++;
+        }
+
+        for (int i = index + 1; i <= MAX_ITEM_BUTTONS; i++) {
+            uiCommandBuilder.set("#ItemButton" + i + "Label.Text", "");
+        }
+
         uiEventBuilder.addEventBinding(
                 CustomUIEventBindingType.Activating,
                 "#CloseButton",
@@ -103,23 +142,37 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     @Override
     public void handleDataEvent(Ref<EntityStore> ref, Store<EntityStore> store, String eventData) {
         if (eventData == null || eventData.isBlank()) {
+            rebuild();
             return;
         }
 
-        logger.info("[CreditSystem] Credit shop event received: " + eventData);
+        String action = extractAction(eventData);
+        logger.info("[CreditSystem] Credit shop event received: " + eventData + " action=" + action);
 
-        if (eventData.contains("close")) {
+        if ("close".equalsIgnoreCase(action)) {
             logger.info("[CreditSystem] Credit shop close event for " + playerRef.getUsername());
             close();
             return;
         }
 
-        int categoryIndex = eventData.indexOf("category:");
-        if (categoryIndex < 0) {
+        if (action.startsWith("category:")) {
+            String selectedKey = action.substring("category:".length()).trim();
+            handleCategorySelection(selectedKey);
+            rebuild();
             return;
         }
 
-        String selectedKey = eventData.substring(categoryIndex + "category:".length()).trim();
+        if (action.startsWith("buy:")) {
+            handleBuyAction(action);
+            rebuild();
+            return;
+        }
+
+        logger.warning("[CreditSystem] Unknown credit shop action: " + action);
+        rebuild();
+    }
+
+    private void handleCategorySelection(String selectedKey) {
         CreditConfig.CategoryEntry selected = config.categories().stream()
                 .filter(category -> category.key().equalsIgnoreCase(selectedKey))
                 .findFirst()
@@ -127,13 +180,118 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
         if (selected == null) {
             logger.warning("[CreditSystem] Unknown category action key: " + selectedKey);
+            contentText = "Invalid category selected.";
             return;
         }
 
-        this.activeTitle = selected.name();
-        this.contentText = "Coming soon: " + selected.name();
-        logger.info("[CreditSystem] Credit shop category selected: " + selected.key());
-        rebuild();
+        selectedCategoryKey = selected.key();
+        selectedCategoryName = selected.name();
+        shopLoader.ensureCategoryFile(selectedCategoryKey);
+        contentText = "Coming soon: " + selected.name();
+        logger.info("[CreditSystem] Category selected key=" + selectedCategoryKey + " file="
+                + shopLoader.ensureCategoryFile(selectedCategoryKey).toAbsolutePath());
+    }
+
+    private void handleBuyAction(String action) {
+        String[] parts = action.split(":", 3);
+        if (parts.length < 3) {
+            playerRef.sendMessage(Message.raw("Invalid purchase action."));
+            return;
+        }
+
+        String categoryKey = parts[1];
+        String itemId = parts[2];
+
+        Map<String, CategoryShopLoader.ShopItem> items = new LinkedHashMap<>(shopLoader.loadCategoryItems(categoryKey));
+        CategoryShopLoader.ShopItem item = items.get(itemId);
+        if (item == null) {
+            playerRef.sendMessage(Message.raw("That shop item was not found."));
+            logger.warning("[CreditSystem] Buy failed item missing category=" + categoryKey + " itemId=" + itemId);
+            return;
+        }
+
+        UUID uuid = playerRef.getUuid();
+        String username = playerRef.getUsername();
+        long balance = creditsService.getBalance(uuid, username);
+
+        if (balance < item.price()) {
+            playerRef.sendMessage(Message.raw("You need " + item.price() + " " + config.currencyName() + " to buy " + item.name() + "."));
+            logger.info("[CreditSystem] Buy failed insufficient balance itemId=" + itemId + " price=" + item.price() + " balance=" + balance);
+            return;
+        }
+
+        boolean purchased = creditsService.tryPurchase(uuid, username, item.price());
+        long resulting = creditsService.getBalance(uuid, username);
+        if (!purchased) {
+            playerRef.sendMessage(Message.raw("Purchase failed. Please try again."));
+            logger.info("[CreditSystem] Buy failed race itemId=" + itemId + " price=" + item.price() + " balanceNow=" + resulting);
+            return;
+        }
+
+        for (String rawCommand : item.commands()) {
+            String command = normalizeCommand(rawCommand, username, uuid);
+            try {
+                CommandManager.get().handleCommand(playerRef, command);
+            } catch (Exception commandError) {
+                logger.log(Level.SEVERE, "[CreditSystem] Failed executing shop command: " + command, commandError);
+            }
+        }
+
+        playerRef.sendMessage(Message.raw("Purchased " + item.name() + " for " + item.price() + " " + config.currencyName() + "."));
+        logger.info("[CreditSystem] Buy success itemId=" + itemId + " price=" + item.price() + " resultingBalance=" + resulting);
+    }
+
+    private Map<String, CategoryShopLoader.ShopItem> loadSelectedCategoryItems() {
+        if (selectedCategoryKey == null || selectedCategoryKey.isBlank()) {
+            contentText = "Select a category.";
+            return Map.of();
+        }
+
+        Map<String, CategoryShopLoader.ShopItem> items = shopLoader.loadCategoryItems(selectedCategoryKey);
+        if (items.isEmpty()) {
+            contentText = "No items configured in " + selectedCategoryKey + ".json";
+        }
+        return items;
+    }
+
+    private String extractAction(String eventData) {
+        try {
+            JsonObject obj = JsonParser.parseString(eventData).getAsJsonObject();
+            if (obj.has("action") && !obj.get("action").isJsonNull()) {
+                return obj.get("action").getAsString();
+            }
+        } catch (Exception ignored) {
+            // fall back below
+        }
+
+        if (eventData.contains("category:")) {
+            int idx = eventData.indexOf("category:");
+            int end = eventData.indexOf('"', idx);
+            if (end > idx) {
+                return eventData.substring(idx, end);
+            }
+            return eventData.substring(idx).trim();
+        }
+        if (eventData.contains("buy:")) {
+            int idx = eventData.indexOf("buy:");
+            int end = eventData.indexOf('"', idx);
+            if (end > idx) {
+                return eventData.substring(idx, end);
+            }
+            return eventData.substring(idx).trim();
+        }
+        if (eventData.contains("close")) {
+            return "close";
+        }
+        return "";
+    }
+
+    private String normalizeCommand(String command, String player, UUID uuid) {
+        String normalized = command.replace("{player}", player).replace("{uuid}", uuid.toString());
+        if (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+        return normalized.trim();
     }
 
     private boolean validateUiMarkupSafely() {
@@ -141,7 +299,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             if (stream == null) {
                 return false;
             }
-            String content = new String(stream.readAllBytes());
+            String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             if (content.contains("Button.Text:")) {
                 logger.severe("[CreditSystem] Invalid UI markup: Button.Text detected.");
                 return false;

@@ -79,6 +79,15 @@ public final class CreditsService {
         repository.setCredits(playerUuid, playerName, amount);
     }
 
+
+    public boolean tryPurchase(UUID playerUuid, String playerName, long price) {
+        if (price < 0) {
+            throw new IllegalArgumentException("Price must be greater than or equal to zero.");
+        }
+        requireOnline();
+        return repository.tryPurchase(playerUuid, playerName, price);
+    }
+
     public void shutdown() {
         if (repository != null) {
             repository.shutdown();
