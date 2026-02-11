@@ -58,61 +58,295 @@ Group #Root {
           Style: (FontSize: 20, Alignment: Center, TextColor: #CBD5E1);
         }
 
-        Group #ItemCardsRow {
+        Group #ItemsScrollContainer {
           Anchor: (Top: 14, Left: 10, Width: 960, Height: 500);
 
-          Group #ItemCard1 {
-            Anchor: (Left: 0, Top: 0, Width: 184, Height: 500);
+          ScrollView #ItemsScrollView {
+            Anchor: (Width: 960, Height: 500);
+
+            Group #ItemsListContent {
+              Anchor: (Width: 940, Height: 4200);
+              LayoutMode: Top;
+
+          Group #ItemRow1 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
             Background: #1E293B(0.90);
-            Label #ItemCard1Name { Anchor: (Top: 12, Left: 8, Width: 168, Height: 52); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard1Price { Anchor: (Top: 8, Left: 8, Width: 168, Height: 32); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard1Desc { Anchor: (Top: 8, Left: 8, Width: 168, Height: 320); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard1Buy { Anchor: (Top: 8, Left: 14, Width: 156, Height: 36); Label #ItemCard1BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemRow1Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow1Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow1Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow1Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow1BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
-          Group #ItemCard2 {
-            Anchor: (Left: 194, Top: 0, Width: 184, Height: 500);
+          Group #ItemRow2 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
             Background: #1E293B(0.90);
-            Label #ItemCard2Name { Anchor: (Top: 12, Left: 8, Width: 168, Height: 52); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard2Price { Anchor: (Top: 8, Left: 8, Width: 168, Height: 32); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard2Desc { Anchor: (Top: 8, Left: 8, Width: 168, Height: 320); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard2Buy { Anchor: (Top: 8, Left: 14, Width: 156, Height: 36); Label #ItemCard2BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemRow2Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow2Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow2Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow2Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow2BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
-          Group #ItemCard3 {
-            Anchor: (Left: 388, Top: 0, Width: 184, Height: 500);
+          Group #ItemRow3 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
             Background: #1E293B(0.90);
-            Label #ItemCard3Name { Anchor: (Top: 12, Left: 8, Width: 168, Height: 52); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard3Price { Anchor: (Top: 8, Left: 8, Width: 168, Height: 32); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard3Desc { Anchor: (Top: 8, Left: 8, Width: 168, Height: 320); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard3Buy { Anchor: (Top: 8, Left: 14, Width: 156, Height: 36); Label #ItemCard3BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemRow3Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow3Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow3Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow3Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow3BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
-          Group #ItemCard4 {
-            Anchor: (Left: 582, Top: 0, Width: 184, Height: 500);
+          Group #ItemRow4 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
             Background: #1E293B(0.90);
-            Label #ItemCard4Name { Anchor: (Top: 12, Left: 8, Width: 168, Height: 52); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard4Price { Anchor: (Top: 8, Left: 8, Width: 168, Height: 32); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard4Desc { Anchor: (Top: 8, Left: 8, Width: 168, Height: 320); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard4Buy { Anchor: (Top: 8, Left: 14, Width: 156, Height: 36); Label #ItemCard4BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemRow4Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow4Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow4Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow4Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow4BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
-          Group #ItemCard5 {
-            Anchor: (Left: 776, Top: 0, Width: 184, Height: 500);
+          Group #ItemRow5 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
             Background: #1E293B(0.90);
-            Label #ItemCard5Name { Anchor: (Top: 12, Left: 8, Width: 168, Height: 52); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard5Price { Anchor: (Top: 8, Left: 8, Width: 168, Height: 32); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard5Desc { Anchor: (Top: 8, Left: 8, Width: 168, Height: 320); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard5Buy { Anchor: (Top: 8, Left: 14, Width: 156, Height: 36); Label #ItemCard5BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemRow5Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow5Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow5Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow5Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow5BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow6 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow6Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow6Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow6Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow6Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow6BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow7 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow7Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow7Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow7Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow7Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow7BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow8 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow8Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow8Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow8Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow8Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow8BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow9 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow9Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow9Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow9Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow9Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow9BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow10 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow10Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow10Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow10Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow10Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow10BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow11 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow11Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow11Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow11Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow11Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow11BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow12 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow12Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow12Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow12Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow12Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow12BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow13 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow13Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow13Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow13Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow13Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow13BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow14 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow14Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow14Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow14Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow14Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow14BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow15 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow15Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow15Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow15Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow15Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow15BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow16 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow16Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow16Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow16Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow16Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow16BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow17 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow17Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow17Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow17Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow17Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow17BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow18 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow18Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow18Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow18Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow18Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow18BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow19 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow19Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow19Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow19Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow19Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow19BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow20 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow20Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow20Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow20Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow20Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow20BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow21 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow21Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow21Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow21Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow21Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow21BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow22 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow22Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow22Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow22Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow22Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow22BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow23 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow23Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow23Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow23Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow23Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow23BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow24 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow24Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow24Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow24Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow24Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow24BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow25 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow25Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow25Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow25Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow25Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow25BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow26 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow26Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow26Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow26Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow26Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow26BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow27 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow27Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow27Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow27Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow27Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow27BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow28 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow28Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow28Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow28Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow28Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow28BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow29 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow29Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow29Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow29Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow29Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow29BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+
+          Group #ItemRow30 {
+            Anchor: (Top: 8, Width: 920, Height: 128);
+            Background: #1E293B(0.90);
+            Label #ItemRow30Name { Anchor: (Top: 10, Left: 10, Width: 540, Height: 30); Text: ""; Style: (FontSize: 22, Alignment: Start, TextColor: #F8FAFC); }
+            Label #ItemRow30Price { Anchor: (Top: 6, Left: 10, Width: 540, Height: 24); Text: ""; Style: (FontSize: 16, Alignment: Start, TextColor: #FDE047); }
+            Label #ItemRow30Desc { Anchor: (Top: 8, Left: 10, Width: 680, Height: 72); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemRow30Buy { Anchor: (Left: 740, Top: 44, Width: 160, Height: 40); Label #ItemRow30BuyLabel { Anchor: (Width: 140, Height: 26); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+          }
+            }
           }
         }
       }
     }
 
     Button #CloseButton {
-      Anchor: (Top: 20, Left: 20, Width: 180, Height: 42);
+      Anchor: (Top: 24, Left: 24, Width: 180, Height: 40);
       Label #CloseButtonLabel {
-        Anchor: (Width: 160, Height: 28);
+        Anchor: (Width: 160, Height: 26);
         Text: "Close";
         Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0);
       }
