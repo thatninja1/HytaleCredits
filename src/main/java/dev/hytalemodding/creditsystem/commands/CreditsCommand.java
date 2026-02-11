@@ -15,7 +15,9 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import dev.hytalemodding.creditsystem.CreditSystemPlugin;
 import dev.hytalemodding.creditsystem.service.CreditsService;
 
+import java.lang.reflect.Method;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.function.BooleanSupplier;
 
 public final class CreditsCommand extends AbstractPlayerCommand {
@@ -33,21 +35,12 @@ public final class CreditsCommand extends AbstractPlayerCommand {
         this.addAliases("credit");
 
         addUsageVariant(new CreditsAdminActionVariant(creditsService, currencyName));
-        addUsageVariant(new CreditsInfoVariant(plugin, creditsService, registrationSupplier));
+        addUsageVariant(new CreditsInfoVariant(plugin, creditsService, currencyName, registrationSupplier));
     }
 
     @Override
     protected void execute(CommandContext context, Store<EntityStore> store, Ref<EntityStore> senderRef, PlayerRef senderPlayerRef, World world) {
-        if (!creditsService.isOnline()) {
-            context.sendMessage(Message.raw("Credits system unavailable."));
-            return;
-        }
-
-        long balance = creditsService.getBalance(senderPlayerRef.getUuid(), senderPlayerRef.getUsername());
-        context.sendMessage(Message.raw(currencyName + ": " + balance));
-        if (canSeeAdminHelp(context.sender())) {
-            context.sendMessage(Message.raw("Admin: /credits give <player> <amount> | /credits set <player> <amount> | /credits remove <player> <amount>"));
-        }
+        sendHelpMenu(context, context.sender());
     }
 
     private static boolean canSeeAdminHelp(CommandSender sender) {
@@ -59,6 +52,52 @@ public final class CreditsCommand extends AbstractPlayerCommand {
 
     private static boolean hasAdmin(CommandSender sender, String subPermission) {
         return sender.hasPermission("creditsystem.admin") || sender.hasPermission(subPermission);
+    }
+
+    private void sendHelpMenu(CommandContext context, CommandSender sender) {
+        context.sendMessage(Message.raw("Credits Commands:"));
+        context.sendMessage(Message.raw("- /credits bal (alias: /credits balance)"));
+        if (canSeeAdminHelp(sender)) {
+            context.sendMessage(Message.raw("ADMIN ONLY:"));
+            context.sendMessage(Message.raw("- /credits give <player> <amount>"));
+            context.sendMessage(Message.raw("- /credits remove <player> <amount>"));
+            context.sendMessage(Message.raw("- /credits set <player> <amount>"));
+        }
+    }
+
+    private record SenderIdentity(UUID uuid, String username) {
+    }
+
+    private static SenderIdentity resolveSenderIdentity(CommandSender sender) {
+        try {
+            Method playerRefMethod = sender.getClass().getMethod("playerRef");
+            Object playerRefObj = playerRefMethod.invoke(sender);
+            if (playerRefObj instanceof PlayerRef playerRef) {
+                return new SenderIdentity(playerRef.getUuid(), playerRef.getUsername());
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            Method getPlayerRefMethod = sender.getClass().getMethod("getPlayerRef");
+            Object playerRefObj = getPlayerRefMethod.invoke(sender);
+            if (playerRefObj instanceof PlayerRef playerRef) {
+                return new SenderIdentity(playerRef.getUuid(), playerRef.getUsername());
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            Method uuidMethod = sender.getClass().getMethod("getUuid");
+            Method usernameMethod = sender.getClass().getMethod("getUsername");
+            Object uuidObj = uuidMethod.invoke(sender);
+            Object usernameObj = usernameMethod.invoke(sender);
+            if (uuidObj instanceof UUID uuid && usernameObj instanceof String username) {
+                return new SenderIdentity(uuid, username);
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     private static final class CreditsAdminActionVariant extends CommandBase {
@@ -142,15 +181,17 @@ public final class CreditsCommand extends AbstractPlayerCommand {
     private static final class CreditsInfoVariant extends CommandBase {
         private final CreditSystemPlugin plugin;
         private final CreditsService creditsService;
+        private final String currencyName;
         private final BooleanSupplier registrationSupplier;
         private final RequiredArg<String> actionArg;
 
-        private CreditsInfoVariant(CreditSystemPlugin plugin, CreditsService creditsService, BooleanSupplier registrationSupplier) {
-            super("Credits debug/storage");
+        private CreditsInfoVariant(CreditSystemPlugin plugin, CreditsService creditsService, String currencyName, BooleanSupplier registrationSupplier) {
+            super("Credits actions");
             this.plugin = plugin;
             this.creditsService = creditsService;
+            this.currencyName = currencyName;
             this.registrationSupplier = registrationSupplier;
-            this.actionArg = withRequiredArg("action", "storage|debug", ArgTypes.STRING);
+            this.actionArg = withRequiredArg("action", "bal|balance|storage|debug", ArgTypes.STRING);
         }
 
         @Override
@@ -158,26 +199,44 @@ public final class CreditsCommand extends AbstractPlayerCommand {
             String action = context.get(actionArg).toLowerCase(Locale.ROOT);
             CommandSender sender = context.sender();
 
-            if (!sender.hasPermission("creditsystem.admin")) {
-                context.sendMessage(Message.raw("You do not have permission."));
-                return;
-            }
-
             switch (action) {
+                case "bal", "balance" -> {
+                    if (!creditsService.isOnline()) {
+                        context.sendMessage(Message.raw("Credits system unavailable."));
+                        return;
+                    }
+
+                    SenderIdentity identity = resolveSenderIdentity(sender);
+                    if (identity == null) {
+                        context.sendMessage(Message.raw("This command can only be run by a player."));
+                        return;
+                    }
+
+                    long balance = creditsService.getBalance(identity.uuid(), identity.username());
+                    context.sendMessage(Message.raw(currencyName + ": " + balance));
+                }
                 case "storage" -> {
+                    if (!sender.hasPermission("creditsystem.admin")) {
+                        context.sendMessage(Message.raw("You do not have permission."));
+                        return;
+                    }
                     context.sendMessage(Message.raw("Storage backend: " + creditsService.backendName()));
                     context.sendMessage(Message.raw("Storage location: " + creditsService.location()));
                     context.sendMessage(Message.raw("Storage online: " + creditsService.isOnline()));
                     context.sendMessage(Message.raw("Storage last error: " + creditsService.lastError()));
                 }
                 case "debug" -> {
+                    if (!sender.hasPermission("creditsystem.admin")) {
+                        context.sendMessage(Message.raw("You do not have permission."));
+                        return;
+                    }
                     context.sendMessage(Message.raw("Plugin enabled: " + plugin.isEnabled()));
                     context.sendMessage(Message.raw("Storage backend: " + creditsService.backendName()));
                     context.sendMessage(Message.raw("DB online: " + creditsService.isOnline()));
                     context.sendMessage(Message.raw("Commands registered: " + registrationSupplier.getAsBoolean()));
                     context.sendMessage(Message.raw("Last error: " + creditsService.lastError()));
                 }
-                default -> context.sendMessage(Message.raw("Usage: /credits storage | /credits debug"));
+                default -> context.sendMessage(Message.raw("Usage: /credits bal | /credits balance | /credits storage | /credits debug"));
             }
         }
     }

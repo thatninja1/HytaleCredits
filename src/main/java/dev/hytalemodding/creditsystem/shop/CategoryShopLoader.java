@@ -35,18 +35,22 @@ public final class CategoryShopLoader {
             Path file = shopDirectory.resolve(categoryKey + ".json");
             if (!Files.exists(file)) {
                 JsonObject root = new JsonObject();
+
                 JsonObject item1 = new JsonObject();
                 item1.addProperty("name", "VIP Rank");
                 item1.addProperty("price", 1000);
-                item1.addProperty("command", "lp user {player} parent add vip");
+                item1.addProperty("description", "Unlocks VIP permissions and chat prefix.");
+                JsonArray item1Commands = new JsonArray();
+                item1Commands.add("lp user {player} parent add vip");
+                item1Commands.add("say {player} purchased VIP!");
+                item1.add("commands", item1Commands);
                 root.add("item1", item1);
 
                 JsonObject item2 = new JsonObject();
                 item2.addProperty("name", "Example Tag");
                 item2.addProperty("price", 250);
-                JsonArray commands = new JsonArray();
-                commands.add("say {player} bought a tag!");
-                item2.add("commands", commands);
+                item2.addProperty("description", "A sample cosmetic tag for testing purchases.");
+                item2.addProperty("command", "say {player} bought a tag!");
                 root.add("item2", item2);
 
                 try (Writer writer = Files.newBufferedWriter(file)) {
@@ -75,6 +79,7 @@ public final class CategoryShopLoader {
                 JsonObject obj = entry.getValue().getAsJsonObject();
                 String name = obj.has("name") ? obj.get("name").getAsString() : entry.getKey();
                 long price = obj.has("price") ? obj.get("price").getAsLong() : 0L;
+                String description = obj.has("description") ? obj.get("description").getAsString() : "";
 
                 List<String> commands = new ArrayList<>();
                 if (obj.has("commands") && obj.get("commands").isJsonArray()) {
@@ -87,14 +92,11 @@ public final class CategoryShopLoader {
                     commands.add(obj.get("command").getAsString());
                 }
 
-                items.put(entry.getKey(), new ShopItem(name, Math.max(0L, price), commands));
+                items.put(entry.getKey(), new ShopItem(name, Math.max(0L, price), description, commands));
             }
             return items;
         } catch (Exception e) {
             throw new IllegalStateException("Failed to parse shop file for " + categoryKey + ": " + file.toAbsolutePath(), e);
         }
-    }
-
-    public record ShopItem(String name, long price, List<String> commands) {
     }
 }
