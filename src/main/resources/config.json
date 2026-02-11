@@ -1,0 +1,27 @@
+{
+  "ui": {
+    "title": "Credit Shop"
+  },
+  "currencyName": "Credits",
+  "categories": [
+    {
+      "key": "vip",
+      "name": "VIP"
+    },
+    {
+      "key": "tags",
+      "name": "Tags"
+    }
+  ],
+  "database": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "database": "hytale",
+    "username": "root",
+    "password": "password",
+    "maximumPoolSize": 10,
+    "connectTimeoutMs": 5000,
+    "socketTimeoutMs": 15000
+  },
+  "debug": false
+}
