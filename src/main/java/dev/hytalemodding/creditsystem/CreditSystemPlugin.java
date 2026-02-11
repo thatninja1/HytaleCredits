@@ -7,7 +7,9 @@ import dev.hytalemodding.creditsystem.commands.CreditsCommandCollection;
 import dev.hytalemodding.creditsystem.config.CreditConfig;
 import dev.hytalemodding.creditsystem.db.CreditsRepository;
 import dev.hytalemodding.creditsystem.db.CreditsRepositoryFactory;
+import dev.hytalemodding.creditsystem.platform.HytaleCommandBridge;
 import dev.hytalemodding.creditsystem.platform.HytalePlatformBridge;
+import dev.hytalemodding.creditsystem.platform.NoopHytalePlatformBridge;
 import dev.hytalemodding.creditsystem.service.CreditsService;
 
 import java.io.IOException;
@@ -42,6 +44,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
     }
 
     public void onEnable() {
+        logger.info("[CreditSystem] Enabling...");
         this.creditsService = new CreditsService();
 
         try {
@@ -55,11 +58,27 @@ public final class CreditSystemPlugin extends JavaPlugin {
                         new Object[]{creditsService.backendName(), creditsService.location()});
             }
 
-            this.platformBridge = HytalePlatformBridge.tryCreate(logger);
-            platformBridge.registerCreditsCommands(new CreditsCommandCollection(creditsService, config.currencyName()));
-            platformBridge.registerCreditShopCommand(new CreditShopCommand(creditsService, config, logger));
+            logger.info("[CreditSystem] Registering commands...");
+            this.platformBridge = new HytaleCommandBridge(this, logger, creditsService);
 
-            logger.log(Level.INFO, "CreditSystem enabled.");
+            try {
+                platformBridge.registerCreditsCommands(new CreditsCommandCollection(creditsService, config.currencyName()));
+                logger.info("[CreditSystem] Registered /credits");
+            } catch (Exception creditsRegisterError) {
+                logger.log(Level.SEVERE, "Failed to register /credits", creditsRegisterError);
+                this.platformBridge = new NoopHytalePlatformBridge();
+            }
+
+            try {
+                if (platformBridge != null) {
+                    platformBridge.registerCreditShopCommand(new CreditShopCommand(creditsService, config, logger));
+                    logger.info("[CreditSystem] Registered /creditshop");
+                }
+            } catch (Exception creditShopRegisterError) {
+                logger.log(Level.SEVERE, "Failed to register /creditshop. /credits remains available.", creditShopRegisterError);
+            }
+
+            logger.info("[CreditSystem] Enabled successfully");
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to enable CreditSystem", e);
             creditsService.markOffline("unknown", "unknown", e.getMessage());
@@ -112,5 +131,9 @@ public final class CreditSystemPlugin extends JavaPlugin {
 
     public CreditsService getCreditsService() {
         return creditsService;
+    }
+
+    public boolean didRegisterCommands() {
+        return platformBridge != null && platformBridge.commandsRegistered();
     }
 }
