@@ -30,80 +30,80 @@ Group #Root {
       LayoutMode: Left;
 
       Group #CategoryColumn {
-        Anchor: (Width: 340, Height: 480);
+        Anchor: (Width: 320, Height: 480);
         LayoutMode: Top;
 
-        Button #CategoryButton1 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton1Label { Anchor: (Width: 300, Height: 28); Text: "VIP"; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton2 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton2Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton3 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton3Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton4 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton4Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton5 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton5Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton6 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton6Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton7 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton7Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton8 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton8Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton9 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton9Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton10 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton10Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton11 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton11Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
-        Button #CategoryButton12 { Anchor: (Top: 4, Left: 10, Width: 320, Height: 34); Label #CategoryButton12Label { Anchor: (Width: 300, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton1 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton1Label { Anchor: (Width: 280, Height: 28); Text: "VIP"; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton2 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton2Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton3 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton3Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton4 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton4Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton5 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton5Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton6 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton6Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton7 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton7Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton8 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton8Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton9 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton9Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton10 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton10Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton11 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton11Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton12 { Anchor: (Top: 4, Left: 10, Width: 300, Height: 34); Label #CategoryButton12Label { Anchor: (Width: 280, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
       }
 
       Group #MainColumn {
-        Anchor: (Left: 30, Width: 980, Height: 480);
+        Anchor: (Left: 12, Width: 1028, Height: 480);
 
         Group #ItemCardsRow {
-          Anchor: (Top: 0, Width: 960, Height: 406);
+          Anchor: (Top: 0, Left: 0, Width: 1028, Height: 406);
 
           Group #ItemCard1 {
-            Anchor: (Left: 0, Top: 0, Width: 184, Height: 406);
+            Anchor: (Left: 0, Top: 0, Width: 196, Height: 406);
             Background: #1E293B(0.90);
-            Label #ItemCard1Name { Anchor: (Top: 14, Left: 8, Width: 168, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard1Price { Anchor: (Top: 54, Left: 8, Width: 168, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard1Desc { Anchor: (Top: 92, Left: 8, Width: 168, Height: 280); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard1Buy { Anchor: (Top: 360, Left: 14, Width: 156, Height: 36); Label #ItemCard1BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemCard1Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
+            Label #ItemCard1Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
+            Label #ItemCard1Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemCard1Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard1BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
           Group #ItemCard2 {
-            Anchor: (Left: 194, Top: 0, Width: 184, Height: 406);
+            Anchor: (Left: 208, Top: 0, Width: 196, Height: 406);
             Background: #1E293B(0.90);
-            Label #ItemCard2Name { Anchor: (Top: 14, Left: 8, Width: 168, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard2Price { Anchor: (Top: 54, Left: 8, Width: 168, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard2Desc { Anchor: (Top: 92, Left: 8, Width: 168, Height: 280); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard2Buy { Anchor: (Top: 360, Left: 14, Width: 156, Height: 36); Label #ItemCard2BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemCard2Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
+            Label #ItemCard2Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
+            Label #ItemCard2Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemCard2Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard2BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
           Group #ItemCard3 {
-            Anchor: (Left: 388, Top: 0, Width: 184, Height: 406);
+            Anchor: (Left: 416, Top: 0, Width: 196, Height: 406);
             Background: #1E293B(0.90);
-            Label #ItemCard3Name { Anchor: (Top: 14, Left: 8, Width: 168, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard3Price { Anchor: (Top: 54, Left: 8, Width: 168, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard3Desc { Anchor: (Top: 92, Left: 8, Width: 168, Height: 280); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard3Buy { Anchor: (Top: 360, Left: 14, Width: 156, Height: 36); Label #ItemCard3BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemCard3Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
+            Label #ItemCard3Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
+            Label #ItemCard3Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemCard3Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard3BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
           Group #ItemCard4 {
-            Anchor: (Left: 582, Top: 0, Width: 184, Height: 406);
+            Anchor: (Left: 624, Top: 0, Width: 196, Height: 406);
             Background: #1E293B(0.90);
-            Label #ItemCard4Name { Anchor: (Top: 14, Left: 8, Width: 168, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard4Price { Anchor: (Top: 54, Left: 8, Width: 168, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard4Desc { Anchor: (Top: 92, Left: 8, Width: 168, Height: 280); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard4Buy { Anchor: (Top: 360, Left: 14, Width: 156, Height: 36); Label #ItemCard4BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemCard4Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
+            Label #ItemCard4Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
+            Label #ItemCard4Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemCard4Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard4BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
 
           Group #ItemCard5 {
-            Anchor: (Left: 776, Top: 0, Width: 184, Height: 406);
+            Anchor: (Left: 832, Top: 0, Width: 196, Height: 406);
             Background: #1E293B(0.90);
-            Label #ItemCard5Name { Anchor: (Top: 14, Left: 8, Width: 168, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
-            Label #ItemCard5Price { Anchor: (Top: 54, Left: 8, Width: 168, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
-            Label #ItemCard5Desc { Anchor: (Top: 92, Left: 8, Width: 168, Height: 280); Text: ""; Style: (FontSize: 14, Alignment: Start, TextColor: #CBD5E1); }
-            Button #ItemCard5Buy { Anchor: (Top: 360, Left: 14, Width: 156, Height: 36); Label #ItemCard5BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
+            Label #ItemCard5Name { Anchor: (Top: 14, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
+            Label #ItemCard5Price { Anchor: (Top: 54, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
+            Label #ItemCard5Desc { Anchor: (Top: 92, Left: 14, Width: 168, Height: 250); Text: ""; TextWrap: true; Style: (FontSize: 13, Alignment: Start, TextColor: #CBD5E1); }
+            Button #ItemCard5Buy { Anchor: (Top: 360, Left: 20, Width: 156, Height: 36); Label #ItemCard5BuyLabel { Anchor: (Width: 136, Height: 24); Text: "Buy"; Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0); } }
           }
         }
 
         Group #PaginationRow {
-          Anchor: (Top: 406, Left: 0, Width: 960, Height: 50);
+          Anchor: (Top: 406, Left: 0, Width: 1028, Height: 50);
 
           Button #PrevPageButton {
-            Anchor: (Left: 250, Top: 6, Width: 150, Height: 38);
+            Anchor: (Left: 284, Top: 6, Width: 150, Height: 38);
             Label #PrevPageButtonLabel {
               Anchor: (Width: 130, Height: 24);
               Text: "Prev";
@@ -112,13 +112,13 @@ Group #Root {
           }
 
           Label #PageIndicatorLabel {
-            Anchor: (Left: 0, Top: 8, Width: 960, Height: 34);
+            Anchor: (Left: 0, Top: 8, Width: 1028, Height: 34);
             Text: "";
             Style: (FontSize: 18, Alignment: Center, TextColor: #CBD5E1);
           }
 
           Button #NextPageButton {
-            Anchor: (Left: 560, Top: 6, Width: 150, Height: 38);
+            Anchor: (Left: 594, Top: 6, Width: 150, Height: 38);
             Label #NextPageButtonLabel {
               Anchor: (Width: 130, Height: 24);
               Text: "Next";
