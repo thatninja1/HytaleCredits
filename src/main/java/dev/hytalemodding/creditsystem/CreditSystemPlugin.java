@@ -33,12 +33,6 @@ public final class CreditSystemPlugin extends JavaPlugin {
     private CreditsService creditsService;
     private HytalePlatformBridge platformBridge;
     private CategoryShopLoader shopLoader;
-    private volatile int activeUiSlot = 0;
-    private volatile UiTemplateWriter.GeneratedTemplates[] uiSlots = new UiTemplateWriter.GeneratedTemplates[]{
-            UiTemplateWriter.GeneratedTemplates.defaults(),
-            UiTemplateWriter.GeneratedTemplates.defaults()
-    };
-    private volatile UiTemplateWriter.GeneratedTemplates activeShopUiTemplates = UiTemplateWriter.GeneratedTemplates.defaults();
 
     public CreditSystemPlugin(JavaPluginInit init) {
         super(init);
@@ -62,10 +56,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
         try {
             Files.createDirectories(Path.of("plugins", "CreditSystem"));
             this.config = CreditConfig.loadDefault(logger);
-            this.uiSlots = UiTemplateWriter.writeAllSlotUiFiles(this.config, logger);
-            this.activeUiSlot = 0;
-            this.activeShopUiTemplates = this.uiSlots[this.activeUiSlot];
-            logger.info("[CreditSystem] Active UI slot is now: " + this.activeUiSlot + " (" + this.activeShopUiTemplates.emptyResourcePath() + ")");
+            UiTemplateWriter.writeThemedTemplates(this.config, logger);
 
             CreditsRepository repository = initializeWithFallback(config);
             if (repository != null) {
@@ -150,17 +141,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
             CategoryShopLoader.ReloadReport report = shopLoader.reloadAllShops(categoryKeys);
 
             this.config = newConfig;
-            this.activeUiSlot = this.activeUiSlot == 0 ? 1 : 0;
-            UiTemplateWriter.GeneratedTemplates refreshedSlot = UiTemplateWriter.writeSlotUiFiles(this.config, logger, this.activeUiSlot);
-            if (this.uiSlots == null || this.uiSlots.length < 2) {
-                this.uiSlots = new UiTemplateWriter.GeneratedTemplates[]{
-                        UiTemplateWriter.GeneratedTemplates.defaults(),
-                        UiTemplateWriter.GeneratedTemplates.defaults()
-                };
-            }
-            this.uiSlots[this.activeUiSlot] = refreshedSlot;
-            this.activeShopUiTemplates = refreshedSlot;
-            logger.info("[CreditSystem] Active UI slot is now: " + this.activeUiSlot + " (" + this.activeShopUiTemplates.emptyResourcePath() + ")");
+            UiTemplateWriter.writeThemedTemplates(this.config, logger);
 
             if (!report.failures().isEmpty()) {
                 String firstError = report.failures().entrySet().iterator().next().getKey() + " -> "
@@ -178,10 +159,6 @@ public final class CreditSystemPlugin extends JavaPlugin {
         }
     }
 
-
-    public UiTemplateWriter.GeneratedTemplates getActiveShopUiTemplates() {
-        return activeShopUiTemplates == null ? UiTemplateWriter.GeneratedTemplates.defaults() : activeShopUiTemplates;
-    }
 
     public void onDisable() {
         if (creditsService != null) {

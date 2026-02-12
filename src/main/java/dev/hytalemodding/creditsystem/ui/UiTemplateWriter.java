@@ -5,11 +5,11 @@ import dev.hytalemodding.creditsystem.config.CreditConfig;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
-import java.util.HexFormat;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,47 +18,48 @@ public final class UiTemplateWriter {
     private static final String EMPTY_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
     private static final String ITEMS_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
-    private static final String EMPTY_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopEmpty_slot%d.ui";
-    private static final String ITEMS_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopItems_slot%d.ui";
+    public static final String EMPTY_RESOURCE_PATH = "Pages/Credits/CreditShopEmpty.ui";
+    public static final String ITEMS_RESOURCE_PATH = "Pages/Credits/CreditShopItems.ui";
 
-    private static final String EMPTY_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty_slot%d.ui";
-    private static final String ITEMS_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopItems_slot%d.ui";
+    public static final String EMPTY_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
+    public static final String ITEMS_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
     private UiTemplateWriter() {
     }
 
-    public static GeneratedTemplates[] writeAllSlotUiFiles(CreditConfig config, Logger logger) {
-        GeneratedTemplates[] slots = new GeneratedTemplates[2];
-        slots[0] = writeSlotUiFiles(config, logger, 0);
-        slots[1] = writeSlotUiFiles(config, logger, 1);
-        return slots;
-    }
-
-    public static GeneratedTemplates writeSlotUiFiles(CreditConfig config, Logger logger, int slot) {
-        int safeSlot = normalizeSlot(slot);
-        String hash = computeThemeHash(config);
-
-        String emptyResourcePath = EMPTY_RESOURCE_TEMPLATE.formatted(safeSlot);
-        String itemsResourcePath = ITEMS_RESOURCE_TEMPLATE.formatted(safeSlot);
-        String emptyDiskPath = EMPTY_DISK_TEMPLATE.formatted(safeSlot);
-        String itemsDiskPath = ITEMS_DISK_TEMPLATE.formatted(safeSlot);
-
-        logger.info("[CreditSystem] Applying UI theme hash=" + hash + " to UI slot " + safeSlot + ".");
-
-        try {
-            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, emptyDiskPath, false);
-            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, itemsDiskPath, true);
-        } catch (Exception e) {
-            logger.warning("[CreditSystem] Failed writing themed UI templates for slot " + safeSlot + ": " + e.getMessage());
+    public static void writeThemedTemplates(CreditConfig config, Logger logger) {
+        CreditConfig.UiTheme theme = config == null || config.ui() == null ? null : config.ui().theme();
+        if (theme == null) {
+            logger.info("[CreditSystem] ui.theme missing; preserving existing disk UI files and only ensuring defaults exist.");
+            ensureDefaultExists(EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, logger);
+            ensureDefaultExists(ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, logger);
+            return;
         }
 
-        GeneratedTemplates templates = new GeneratedTemplates(safeSlot, hash, emptyResourcePath, itemsResourcePath, emptyDiskPath, itemsDiskPath);
-        logger.info("[CreditSystem] Active UI templates: empty=" + templates.emptyResourcePath() + " items=" + templates.itemsResourcePath());
-        return templates;
+        try {
+            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, false);
+            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, true);
+        } catch (Exception e) {
+            logger.warning("[CreditSystem] Failed writing themed UI templates: " + e.getMessage());
+        }
     }
 
-    private static int normalizeSlot(int slot) {
-        return slot == 1 ? 1 : 0;
+    private static void ensureDefaultExists(String sourceResourcePath, String diskOutputPath, Logger logger) {
+        try {
+            Path outputPath = Path.of(diskOutputPath);
+            if (Files.exists(outputPath)) {
+                return;
+            }
+            String template = loadTemplate(sourceResourcePath);
+            if (template == null || template.isBlank()) {
+                logger.warning("[CreditSystem] Missing UI template resource: " + sourceResourcePath);
+                return;
+            }
+            atomicWrite(outputPath, template);
+            logger.info("[CreditSystem] Created default UI template: " + outputPath.toAbsolutePath());
+        } catch (Exception e) {
+            logger.warning("[CreditSystem] Failed ensuring default UI template " + diskOutputPath + ": " + e.getMessage());
+        }
     }
 
     private static void writeOne(CreditConfig config,
@@ -75,7 +76,8 @@ public final class UiTemplateWriter {
         CreditConfig.UiTheme theme = config.ui().theme();
 
         String themed = template;
-        themed = applyStyle(themed, "#TitleLabel", style(theme.title(), "Center", 46, "#E5E7EB"), logger, sourceResourcePath);
+        String titleStyle = style(theme.title(), "Center", 46, "#E5E7EB");
+        themed = applyStyle(themed, "#TitleLabel", titleStyle, logger, sourceResourcePath);
         themed = applyStyle(themed, "#CreditsBalanceLabel", style(theme.credits(), "Center", 24, "#93C5FD"), logger, sourceResourcePath);
         themed = applyStyle(themed, "#CloseButtonLabel", style(theme.closeButton(), "Center", 16, "#E2E8F0"), logger, sourceResourcePath);
 
@@ -101,11 +103,27 @@ public final class UiTemplateWriter {
             }
         }
 
-        Path diskPath = Path.of(diskOutputPath);
-        Files.createDirectories(diskPath.getParent());
-        Files.writeString(diskPath, themed, StandardCharsets.UTF_8,
+        Path outputPath = Path.of(diskOutputPath);
+        atomicWrite(outputPath, themed);
+
+        String verify = Files.readString(outputPath, StandardCharsets.UTF_8);
+        boolean containsTitleColor = verify.contains("#TitleLabel") && verify.contains("TextColor: " + theme.title().color());
+        boolean containsTitleSize = verify.contains("#TitleLabel") && verify.contains("FontSize: " + theme.title().fontSize());
+        logger.info("[CreditSystem] Applied theme: TitleLabel => FontSize=" + theme.title().fontSize()
+                + " TextColor=" + theme.title().color() + " (verifiedInFile color=" + containsTitleColor
+                + ", size=" + containsTitleSize + ")");
+    }
+
+    private static void atomicWrite(Path outputPath, String content) throws IOException {
+        Files.createDirectories(outputPath.getParent());
+        Path tempPath = outputPath.resolveSibling(outputPath.getFileName() + ".tmp");
+        Files.writeString(tempPath, content, StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-        logger.info("[CreditSystem] Wrote themed UI template: " + diskPath.toAbsolutePath());
+        try {
+            Files.move(tempPath, outputPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException ignored) {
+            Files.move(tempPath, outputPath, StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     private static String loadTemplate(String resourcePath) throws IOException {
@@ -114,24 +132,6 @@ public final class UiTemplateWriter {
                 return null;
             }
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
-
-    private static String computeThemeHash(CreditConfig config) {
-        StringBuilder b = new StringBuilder();
-        b.append(config.ui().title()).append('|').append(config.currencyName()).append('|');
-        CreditConfig.UiTheme t = config.ui().theme();
-        b.append(t.title()).append('|').append(t.credits()).append('|').append(t.selectedCategory()).append('|')
-                .append(t.categoryButton()).append('|').append(t.closeButton()).append('|').append(t.pageIndicator()).append('|')
-                .append(t.paginationButton()).append('|').append(t.itemName()).append('|').append(t.itemPrice()).append('|')
-                .append(t.itemDescription()).append('|').append(t.buyLabel());
-
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            byte[] digest = md.digest(b.toString().getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(digest).substring(0, 10);
-        } catch (Exception e) {
-            return Integer.toHexString(b.toString().hashCode());
         }
     }
 
@@ -159,25 +159,5 @@ public final class UiTemplateWriter {
         }
 
         return "FontSize: " + size + ", Alignment: " + alignment + ", TextColor: " + color;
-    }
-
-    public record GeneratedTemplates(
-            int slot,
-            String hash,
-            String emptyResourcePath,
-            String itemsResourcePath,
-            String emptyDiskPath,
-            String itemsDiskPath
-    ) {
-        public static GeneratedTemplates defaults() {
-            return new GeneratedTemplates(
-                    0,
-                    "builtin",
-                    EMPTY_RESOURCE_TEMPLATE.formatted(0),
-                    ITEMS_RESOURCE_TEMPLATE.formatted(0),
-                    EMPTY_DISK_TEMPLATE.formatted(0),
-                    ITEMS_DISK_TEMPLATE.formatted(0)
-            );
-        }
     }
 }

@@ -74,45 +74,42 @@ Storage schema (current):
 
 ### UI Styling (colors/font sizes)
 
-CreditSystem applies `ui.theme` by writing two pre-created UI slots on disk:
+CreditSystem always appends these stable CustomUI document IDs only:
 
-- `Common/UI/Custom/Pages/Credits/CreditShopEmpty_slot0.ui`
-- `Common/UI/Custom/Pages/Credits/CreditShopItems_slot0.ui`
-- `Common/UI/Custom/Pages/Credits/CreditShopEmpty_slot1.ui`
-- `Common/UI/Custom/Pages/Credits/CreditShopItems_slot1.ui`
+- `Pages/Credits/CreditShopEmpty.ui`
+- `Pages/Credits/CreditShopItems.ui`
 
-On startup, both slots are generated and slot `0` is active. On `/credits reload`, the plugin toggles active slot (`0 ↔ 1`) and rewrites the newly active slot with the latest theme so clients can refresh styles safely without runtime `Style` set commands.
+Theme values from `config.json` (`ui.theme.*`) are applied by rewriting the matching disk templates on startup and `/credits reload`:
 
-The appended CustomUI document paths are `Pages/Credits/CreditShopEmpty_slot0.ui`, `Pages/Credits/CreditShopItems_slot0.ui`, `Pages/Credits/CreditShopEmpty_slot1.ui`, and `Pages/Credits/CreditShopItems_slot1.ui`.
+- `Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
 
 Runtime `CustomUI Set` calls for `Label.Style` (or `Label.Style.FontSize`) are **not used** because they can disconnect clients on this platform.
 
-Use `ui.theme` in `config.json` to control `TextColor` and `FontSize` values that are baked into those `.ui` files.
-
-Example:
+Example `config.json` snippet:
 
 ```json
 {
   "ui": {
     "title": "Credit Shop",
     "theme": {
-      "title": { "fontSize": 42, "color": "#FFFFFF" },
-      "credits": { "fontSize": 22, "color": "#8FAAFC" },
-      "selectedCategory": { "fontSize": 20, "color": "#CBD5E1" },
-      "categoryButton": { "fontSize": 18, "color": "#FDE047" },
-      "closeButton": { "fontSize": 16, "color": "#E2E8F0" },
-      "pageIndicator": { "fontSize": 18, "color": "#E5E7EB" },
-      "paginationButton": { "fontSize": 16, "color": "#E2E8F0" },
-      "itemName": { "fontSize": 20, "color": "#F8FAFC" },
-      "itemPrice": { "fontSize": 18, "color": "#FDE047" },
-      "itemDescription": { "fontSize": 13, "color": "#CBD5E1" },
-      "buyLabel": { "fontSize": 16, "color": "#E2E8F0" }
+      "title": { "fontSize": 46, "color": "#808080" },
+      "credits": { "fontSize": 24, "color": "#808080" },
+      "selectedCategory": { "fontSize": 20, "color": "#808080" },
+      "categoryButton": { "fontSize": 18, "color": "#808080" },
+      "closeButton": { "fontSize": 16, "color": "#808080" },
+      "pageIndicator": { "fontSize": 18, "color": "#808080" },
+      "paginationButton": { "fontSize": 16, "color": "#808080" },
+      "itemName": { "fontSize": 20, "color": "#808080" },
+      "itemPrice": { "fontSize": 18, "color": "#808080" },
+      "itemDescription": { "fontSize": 13, "color": "#808080" },
+      "buyLabel": { "fontSize": 16, "color": "#808080" }
     }
   }
 }
 ```
 
-After changing theme values, run `/credits reload`, then close and reopen `/creditshop` to see updates.
+After changing theme values, run `/credits reload`, then close and reopen `/creditshop` to see updates. If the client still shows old styles, relog may be required due to client-side UI caching.
 
 ## Credit Shop Items (per-category JSON)
 
@@ -120,6 +117,28 @@ Per-category files live at:
 
 - `plugins/CreditSystem/shops/<categoryKey>.json`
 - Example: `plugins/CreditSystem/shops/ranks.json`
+
+Example `ranks.json`:
+
+```json
+{
+  "item1": {
+    "name": "Cadet Rank",
+    "price": 1000,
+    "description": "Unlocks the Cadet rank on Skyblock.",
+    "command": "lp user {player} parent add cadet server=skyblock"
+  },
+  "item2": {
+    "name": "Veteran Rank",
+    "price": 2500,
+    "description": "Unlocks the Veteran rank and perks.",
+    "commands": [
+      "lp user {player} parent add veteran server=skyblock",
+      "broadcast {player} purchased Veteran rank"
+    ]
+  }
+}
+```
 
 ### Item schema
 

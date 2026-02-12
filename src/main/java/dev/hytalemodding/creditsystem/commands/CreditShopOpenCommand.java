@@ -13,7 +13,6 @@ import dev.hytalemodding.creditsystem.config.CreditConfig;
 import dev.hytalemodding.creditsystem.service.CreditsService;
 import dev.hytalemodding.creditsystem.shop.CategoryShopLoader;
 import dev.hytalemodding.creditsystem.ui.HytaleCreditShopPage;
-import dev.hytalemodding.creditsystem.ui.UiTemplateWriter;
 
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -22,15 +21,13 @@ import java.util.logging.Logger;
 public final class CreditShopOpenCommand extends AbstractPlayerCommand {
     private final CreditsService creditsService;
     private final Supplier<CreditConfig> configSupplier;
-    private final Supplier<UiTemplateWriter.GeneratedTemplates> templatesSupplier;
     private final CategoryShopLoader shopLoader;
     private final Logger logger;
 
-    public CreditShopOpenCommand(CreditsService creditsService, Supplier<CreditConfig> configSupplier, Supplier<UiTemplateWriter.GeneratedTemplates> templatesSupplier, CategoryShopLoader shopLoader, Logger logger) {
+    public CreditShopOpenCommand(CreditsService creditsService, Supplier<CreditConfig> configSupplier, CategoryShopLoader shopLoader, Logger logger) {
         super("creditshop", "Open the credit shop");
         this.creditsService = creditsService;
         this.configSupplier = configSupplier;
-        this.templatesSupplier = templatesSupplier;
         this.shopLoader = shopLoader;
         this.logger = logger;
         this.addAliases("cshop");
@@ -53,7 +50,7 @@ public final class CreditShopOpenCommand extends AbstractPlayerCommand {
             player.getPageManager().openCustomPage(
                     senderRef,
                     store,
-                    new HytaleCreditShopPage(senderPlayerRef, creditsService, configSupplier, templatesSupplier, shopLoader, logger)
+                    new HytaleCreditShopPage(senderPlayerRef, creditsService, configSupplier, shopLoader, logger)
             );
             context.sendMessage(Message.raw("Credit shop opened."));
         } catch (Exception e) {

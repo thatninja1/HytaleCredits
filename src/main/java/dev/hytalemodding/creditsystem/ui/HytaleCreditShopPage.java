@@ -45,7 +45,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     private final CreditsService creditsService;
     private final Supplier<CreditConfig> configSupplier;
-    private final Supplier<UiTemplateWriter.GeneratedTemplates> templatesSupplier;
     private final Logger logger;
     private final CategoryShopLoader shopLoader;
 
@@ -56,13 +55,11 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     public HytaleCreditShopPage(PlayerRef playerRef,
                                 CreditsService creditsService,
                                 Supplier<CreditConfig> configSupplier,
-                                Supplier<UiTemplateWriter.GeneratedTemplates> templatesSupplier,
                                 CategoryShopLoader shopLoader,
                                 Logger logger) {
         super(playerRef, CustomPageLifetime.CanDismiss);
         this.creditsService = creditsService;
         this.configSupplier = configSupplier;
-        this.templatesSupplier = templatesSupplier;
         this.shopLoader = shopLoader;
         this.logger = logger;
         this.currentPage = 0;
@@ -75,21 +72,18 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     @Override
     public void build(Ref<EntityStore> ref, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, Store<EntityStore> store) {
-        UiTemplateWriter.GeneratedTemplates templates = templatesSupplier.get();
-        if (templates == null) {
-            templates = UiTemplateWriter.GeneratedTemplates.defaults();
+        if ((!ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
+                || !ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
+                || !validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
+                || !validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH))) {
+            logger.warning("[CreditSystem] UI files missing/invalid. Regenerating stable templates once.");
+            UiTemplateWriter.writeThemedTemplates(currentConfig(), logger);
         }
 
-        if ((!ensureUiResourceExists(templates.emptyDiskPath()) || !ensureUiResourceExists(templates.itemsDiskPath())
-                || !validateUiMarkupSafely(templates.emptyDiskPath()) || !validateUiMarkupSafely(templates.itemsDiskPath()))) {
-            logger.warning("[CreditSystem] UI files missing/invalid. Regenerating active slot once.");
-            templates = UiTemplateWriter.writeSlotUiFiles(currentConfig(), logger, templates.slot());
-        }
-
-        boolean canUseThemedFiles = ensureUiResourceExists(templates.emptyDiskPath())
-                && ensureUiResourceExists(templates.itemsDiskPath())
-                && validateUiMarkupSafely(templates.emptyDiskPath())
-                && validateUiMarkupSafely(templates.itemsDiskPath());
+        boolean canUseThemedFiles = ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
+                && ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
+                && validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
+                && validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH);
 
         if (!canUseThemedFiles) {
             logger.warning("[CreditSystem] Falling back to bundled UI templates.");
@@ -103,9 +97,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
         CreditConfig config = currentConfig();
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
-        String template = canUseThemedFiles
-                ? (hasCategory ? templates.itemsResourcePath() : templates.emptyResourcePath())
-                : (hasCategory ? FALLBACK_ITEMS_TEMPLATE : FALLBACK_EMPTY_TEMPLATE);
+        String template = hasCategory ? FALLBACK_ITEMS_TEMPLATE : FALLBACK_EMPTY_TEMPLATE;
         logger.info("[CreditSystem] Appending UI document: " + template);
         uiCommandBuilder.append(template);
 
