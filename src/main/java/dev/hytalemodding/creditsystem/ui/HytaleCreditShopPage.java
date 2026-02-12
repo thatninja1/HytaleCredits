@@ -38,7 +38,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private static final int MAX_CATEGORY_BUTTONS = 12;
     private static final int PAGE_SIZE = 5;
     private static final int DESCRIPTION_MAX_LINES = 6;
-    private static final int DESCRIPTION_BASE_FONT = 13;
     private static final int DESCRIPTION_BASE_CHARS = 22;
 
     private final CreditsService creditsService;
@@ -46,7 +45,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private final Logger logger;
     private final CategoryShopLoader shopLoader;
 
-    private UICommandBuilder currentUiCommandBuilder;
     private String selectedCategoryKey;
     private String selectedCategoryName;
     private int currentPage;
@@ -88,9 +86,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
         String template = hasCategory ? ITEMS_TEMPLATE : EMPTY_TEMPLATE;
         uiCommandBuilder.append(template);
-        this.currentUiCommandBuilder = uiCommandBuilder;
-
-        applyGlobalTheme(config, uiCommandBuilder, hasCategory);
 
         uiCommandBuilder.set("#TitleLabel.Text", config.ui().title());
         if (!creditsService.isOnline()) {
@@ -146,7 +141,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     private void renderPagedItems(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
         Map<String, ShopItem> itemMap = shopLoader.loadCategoryItems(selectedCategoryKey);
-        CategoryShopLoader.CategoryStyles categoryStyles = shopLoader.loadCategoryStyles(selectedCategoryKey);
         List<Map.Entry<String, ShopItem>> allItems = new ArrayList<>(itemMap.entrySet());
         if (config.debug()) {
             String order = String.join(", ", allItems.stream().map(Map.Entry::getKey).toList());
@@ -162,38 +156,11 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                 Map.Entry<String, ShopItem> entry = allItems.get(index);
                 ShopItem item = entry.getValue();
 
-                CreditConfig.TextStyle nameStyle = resolveStyle(
-                        config.ui().theme().itemName(),
-                        categoryStyles.itemName(),
-                        item.styles() == null ? null : item.styles().name()
-                );
-                CreditConfig.TextStyle priceStyle = resolveStyle(
-                        config.ui().theme().itemPrice(),
-                        categoryStyles.itemPrice(),
-                        item.styles() == null ? null : item.styles().price()
-                );
-                CreditConfig.TextStyle descStyle = resolveStyle(
-                        config.ui().theme().itemDescription(),
-                        categoryStyles.itemDescription(),
-                        item.styles() == null ? null : item.styles().description()
-                );
-                CreditConfig.TextStyle buyStyle = resolveStyle(
-                        config.ui().theme().buyLabel(),
-                        categoryStyles.buyLabel(),
-                        item.styles() == null ? null : item.styles().buy()
-                );
-
-                applyTextStyle("#ItemCard" + card + "Name", nameStyle.fontSize(), nameStyle.color(), "Center");
-                applyTextStyle("#ItemCard" + card + "Price", priceStyle.fontSize(), priceStyle.color(), "Center");
-                applyTextStyle("#ItemCard" + card + "Desc", descStyle.fontSize(), descStyle.color(), "Start");
-                applyTextStyle("#ItemCard" + card + "BuyLabel", buyStyle.fontSize(), buyStyle.color(), "Center");
 
                 uiCommandBuilder.set("#ItemCard" + card + "Name.Text", item.name());
                 uiCommandBuilder.set("#ItemCard" + card + "Price.Text", item.price() + " " + config.currencyName());
 
-                int charsPerLine = Math.max(10, Math.round((float) DESCRIPTION_BASE_CHARS
-                        * DESCRIPTION_BASE_FONT
-                        / Math.max(1, descStyle.fontSize())));
+                int charsPerLine = DESCRIPTION_BASE_CHARS;
                 uiCommandBuilder.set("#ItemCard" + card + "Desc.Text", wrapForUi(item.description(), charsPerLine, DESCRIPTION_MAX_LINES));
                 uiCommandBuilder.set("#ItemCard" + card + "BuyLabel.Text", "Buy");
 
@@ -225,59 +192,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                     EventData.of("action", "page:next")
             );
         }
-    }
-
-    private void applyGlobalTheme(CreditConfig config, UICommandBuilder uiCommandBuilder, boolean hasCategory) {
-        CreditConfig.UiTheme theme = config.ui().theme();
-        applyTextStyle("#TitleLabel", theme.title().fontSize(), theme.title().color(), "Center");
-        applyTextStyle("#CreditsBalanceLabel", theme.credits().fontSize(), theme.credits().color(), "Center");
-        applyTextStyle("#CloseButtonLabel", theme.closeButton().fontSize(), theme.closeButton().color(), "Center");
-
-        for (int i = 1; i <= MAX_CATEGORY_BUTTONS; i++) {
-            applyTextStyle("#CategoryButton" + i + "Label", theme.categoryButton().fontSize(), theme.categoryButton().color(), "Start");
-        }
-
-        if (hasCategory) {
-            applyTextStyle("#SelectedCategoryLabel", theme.selectedCategory().fontSize(), theme.selectedCategory().color(), "Center");
-            applyTextStyle("#PageIndicatorLabel", theme.pageIndicator().fontSize(), theme.pageIndicator().color(), "Center");
-            applyTextStyle("#PrevPageButtonLabel", theme.paginationButton().fontSize(), theme.paginationButton().color(), "Center");
-            applyTextStyle("#NextPageButtonLabel", theme.paginationButton().fontSize(), theme.paginationButton().color(), "Center");
-        }
-    }
-
-    private void applyTextStyle(String baseSelector, int fontSize, String color, String alignment) {
-        if (currentUiCommandBuilder == null) {
-            return;
-        }
-
-        if (fontSize < 8 || fontSize > 80) {
-            logger.warning("[CreditSystem] Skipping invalid font size for " + baseSelector + ": " + fontSize);
-            return;
-        }
-
-        if (color == null || !color.matches("^#[0-9A-Fa-f]{6}$")) {
-            logger.warning("[CreditSystem] Skipping invalid color for " + baseSelector + ": " + color);
-            return;
-        }
-
-        String safeAlignment = "Center".equals(alignment) || "Start".equals(alignment)
-                ? alignment
-                : "Start";
-
-        String styleValue = "(FontSize: " + fontSize
-                + ", Alignment: " + safeAlignment
-                + ", TextColor: " + color + ")";
-        currentUiCommandBuilder.set(baseSelector + ".Style", styleValue);
-    }
-
-    private CreditConfig.TextStyle resolveStyle(CreditConfig.TextStyle global, CreditConfig.TextStyle category, CreditConfig.TextStyle item) {
-        if (item != null) {
-            return item;
-        }
-        if (category != null) {
-            return category;
-        }
-        return global;
     }
 
     @Override

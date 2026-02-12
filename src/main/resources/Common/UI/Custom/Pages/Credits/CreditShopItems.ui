@@ -48,10 +48,10 @@ Group #Root {
       }
 
       Group #MainColumn {
-        Anchor: (Left: 12, Width: 1028, Height: 480);
+        Anchor: (Left: -8, Width: 1028, Height: 480);
 
         Group #ItemCardsRow {
-          Anchor: (Top: 0, Left: -120, Width: 1028, Height: 406);
+          Anchor: (Top: 0, Left: -150, Width: 1028, Height: 406);
 
           Group #ItemCard1 {
             Anchor: (Left: 0, Top: 0, Width: 196, Height: 406);
@@ -100,7 +100,7 @@ Group #Root {
         }
 
         Group #PaginationRow {
-          Anchor: (Top: 406, Left: -120, Width: 1028, Height: 50);
+          Anchor: (Top: 406, Left: -150, Width: 1028, Height: 50);
 
           Button #PrevPageButton {
             Anchor: (Left: 284, Top: 6, Width: 150, Height: 38);
