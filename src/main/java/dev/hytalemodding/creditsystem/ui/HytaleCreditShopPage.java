@@ -21,6 +21,9 @@ import dev.hytalemodding.creditsystem.shop.ShopItem;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -431,25 +434,60 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     }
 
     private boolean ensureUiResourceExists(String resourcePath) {
-        try (InputStream stream = getClass().getResourceAsStream("/" + resourcePath)) {
-            if (stream == null) {
-                logger.severe("[CreditSystem] UI resource missing: " + resourcePath);
-                return false;
+        try {
+            Path diskPath = Path.of(resourcePath);
+            if (Files.exists(diskPath)) {
+                logger.info("[CreditSystem] UI resource exists: " + diskPath.toAbsolutePath());
+                return true;
             }
-            logger.info("[CreditSystem] UI resource exists: " + resourcePath);
-            return true;
+
+            try (InputStream stream = getClass().getResourceAsStream("/" + resourcePath)) {
+                if (stream == null) {
+                    logger.severe("[CreditSystem] UI resource missing (disk+jar): " + resourcePath);
+                    return false;
+                }
+                Files.createDirectories(diskPath.getParent());
+                Files.writeString(
+                        diskPath,
+                        new String(stream.readAllBytes(), StandardCharsets.UTF_8),
+                        StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.TRUNCATE_EXISTING,
+                        StandardOpenOption.WRITE
+                );
+                logger.info("[CreditSystem] Copied UI resource to disk: " + diskPath.toAbsolutePath());
+                return true;
+            }
         } catch (Exception resourceException) {
             logger.log(Level.SEVERE, "[CreditSystem] Error checking UI resource: " + resourcePath, resourceException);
             return false;
         }
     }
 
+    private String readUiContent(String resourcePath) {
+        try {
+            Path diskPath = Path.of(resourcePath);
+            if (Files.exists(diskPath)) {
+                return Files.readString(diskPath, StandardCharsets.UTF_8);
+            }
+            try (InputStream stream = getClass().getResourceAsStream("/" + resourcePath)) {
+                if (stream == null) {
+                    return null;
+                }
+                return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "[CreditSystem] Failed reading UI content: " + resourcePath, e);
+            return null;
+        }
+    }
+
     private boolean validateUiMarkupSafely(String resourcePath) {
-        try (InputStream stream = getClass().getResourceAsStream("/" + resourcePath)) {
-            if (stream == null) {
+        try {
+            String content = readUiContent(resourcePath);
+            if (content == null) {
                 return false;
             }
-            String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             if (content.contains("Button.Text:")) {
                 logger.severe("[CreditSystem] Invalid UI markup: Button.Text detected in " + resourcePath);
                 return false;

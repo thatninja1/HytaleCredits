@@ -74,21 +74,39 @@ Storage schema (current):
 
 ### UI Styling (colors/font sizes)
 
-Runtime styling via CustomUI `Set` on label styles is unsafe in this project and can disconnect clients.
-Do **not** try to set `Label.Style` or `Label.Style.FontSize` at runtime.
+CreditSystem applies `ui.theme` by generating UI files on disk at startup and on `/credits reload`:
 
-To change colors/font sizes safely, edit the UI template files directly:
+- `Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
 
-- `src/main/resources/Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
-- `src/main/resources/Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
+Runtime `CustomUI Set` calls for `Label.Style` (or `Label.Style.FontSize`) are **not used** because they can disconnect clients on this platform.
 
-Use style entries exactly like:
+Use `ui.theme` in `config.json` to control `TextColor` and `FontSize` values that are baked into the generated `.ui` files.
 
-```ui
-Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC);
+Example:
+
+```json
+{
+  "ui": {
+    "title": "Credit Shop",
+    "theme": {
+      "title": { "fontSize": 42, "color": "#FFFFFF" },
+      "credits": { "fontSize": 22, "color": "#8FAAFC" },
+      "selectedCategory": { "fontSize": 20, "color": "#CBD5E1" },
+      "categoryButton": { "fontSize": 18, "color": "#FDE047" },
+      "closeButton": { "fontSize": 16, "color": "#E2E8F0" },
+      "pageIndicator": { "fontSize": 18, "color": "#E5E7EB" },
+      "paginationButton": { "fontSize": 16, "color": "#E2E8F0" },
+      "itemName": { "fontSize": 20, "color": "#F8FAFC" },
+      "itemPrice": { "fontSize": 18, "color": "#FDE047" },
+      "itemDescription": { "fontSize": 13, "color": "#CBD5E1" },
+      "buyLabel": { "fontSize": 16, "color": "#E2E8F0" }
+    }
+  }
+}
 ```
 
-Supported alignment tokens in this project are `Center` and `Start`.
+After changing theme values, run `/credits reload`, then close and reopen `/creditshop` to see updates.
 
 ## Credit Shop Items (per-category JSON)
 
@@ -119,7 +137,7 @@ Placeholders supported in commands:
 
 ### Runtime CustomUI styling safety
 
-Never send runtime style Set commands in production for this UI (for example `.Style` or `.Style.FontSize`) because they can disconnect players. Keep text color/font/alignment changes inside the `.ui` template files only.
+The plugin does not send runtime `Set` commands to `Label.Style` selectors. Theme changes are written into disk `.ui` files instead.
 
 ### Description wrapping
 

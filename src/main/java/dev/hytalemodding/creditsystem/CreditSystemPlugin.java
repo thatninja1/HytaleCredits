@@ -12,6 +12,7 @@ import dev.hytalemodding.creditsystem.platform.HytalePlatformBridge;
 import dev.hytalemodding.creditsystem.platform.NoopHytalePlatformBridge;
 import dev.hytalemodding.creditsystem.service.CreditsService;
 import dev.hytalemodding.creditsystem.shop.CategoryShopLoader;
+import dev.hytalemodding.creditsystem.ui.UiTemplateWriter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,6 +56,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
         try {
             Files.createDirectories(Path.of("plugins", "CreditSystem"));
             this.config = CreditConfig.loadDefault(logger);
+            UiTemplateWriter.writeShopUiFiles(this.config, logger);
 
             CreditsRepository repository = initializeWithFallback(config);
             if (repository != null) {
@@ -140,6 +142,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
             CategoryShopLoader.ReloadReport report = shopLoader.reloadAllShops(categoryKeys);
 
             this.config = newConfig;
+            UiTemplateWriter.writeShopUiFiles(this.config, logger);
 
             if (!report.failures().isEmpty()) {
                 String firstError = report.failures().entrySet().iterator().next().getKey() + " -> "
