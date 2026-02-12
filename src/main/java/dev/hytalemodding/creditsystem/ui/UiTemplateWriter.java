@@ -18,29 +18,47 @@ public final class UiTemplateWriter {
     private static final String EMPTY_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
     private static final String ITEMS_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
-    private static final String EMPTY_RESOURCE_PATH = "Pages/Credits/CreditShopEmpty.ui";
-    private static final String ITEMS_RESOURCE_PATH = "Pages/Credits/CreditShopItems.ui";
+    private static final String EMPTY_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopEmpty_slot%d.ui";
+    private static final String ITEMS_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopItems_slot%d.ui";
 
-    private static final String EMPTY_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
-    private static final String ITEMS_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
+    private static final String EMPTY_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty_slot%d.ui";
+    private static final String ITEMS_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopItems_slot%d.ui";
 
     private UiTemplateWriter() {
     }
 
-    public static GeneratedTemplates writeShopUiFiles(CreditConfig config, Logger logger) {
+    public static GeneratedTemplates[] writeAllSlotUiFiles(CreditConfig config, Logger logger) {
+        GeneratedTemplates[] slots = new GeneratedTemplates[2];
+        slots[0] = writeSlotUiFiles(config, logger, 0);
+        slots[1] = writeSlotUiFiles(config, logger, 1);
+        return slots;
+    }
+
+    public static GeneratedTemplates writeSlotUiFiles(CreditConfig config, Logger logger, int slot) {
+        int safeSlot = normalizeSlot(slot);
         String hash = computeThemeHash(config);
-        logger.info("[CreditSystem] Applying UI theme hash=" + hash + " to stable UI template files.");
+
+        String emptyResourcePath = EMPTY_RESOURCE_TEMPLATE.formatted(safeSlot);
+        String itemsResourcePath = ITEMS_RESOURCE_TEMPLATE.formatted(safeSlot);
+        String emptyDiskPath = EMPTY_DISK_TEMPLATE.formatted(safeSlot);
+        String itemsDiskPath = ITEMS_DISK_TEMPLATE.formatted(safeSlot);
+
+        logger.info("[CreditSystem] Applying UI theme hash=" + hash + " to UI slot " + safeSlot + ".");
 
         try {
-            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, false);
-            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, true);
+            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, emptyDiskPath, false);
+            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, itemsDiskPath, true);
         } catch (Exception e) {
-            logger.warning("[CreditSystem] Failed writing themed UI templates: " + e.getMessage());
+            logger.warning("[CreditSystem] Failed writing themed UI templates for slot " + safeSlot + ": " + e.getMessage());
         }
 
-        GeneratedTemplates templates = new GeneratedTemplates(hash, EMPTY_RESOURCE_PATH, ITEMS_RESOURCE_PATH, EMPTY_DISK_PATH, ITEMS_DISK_PATH);
+        GeneratedTemplates templates = new GeneratedTemplates(safeSlot, hash, emptyResourcePath, itemsResourcePath, emptyDiskPath, itemsDiskPath);
         logger.info("[CreditSystem] Active UI templates: empty=" + templates.emptyResourcePath() + " items=" + templates.itemsResourcePath());
         return templates;
+    }
+
+    private static int normalizeSlot(int slot) {
+        return slot == 1 ? 1 : 0;
     }
 
     private static void writeOne(CreditConfig config,
@@ -144,6 +162,7 @@ public final class UiTemplateWriter {
     }
 
     public record GeneratedTemplates(
+            int slot,
             String hash,
             String emptyResourcePath,
             String itemsResourcePath,
@@ -152,11 +171,12 @@ public final class UiTemplateWriter {
     ) {
         public static GeneratedTemplates defaults() {
             return new GeneratedTemplates(
+                    0,
                     "builtin",
-                    EMPTY_RESOURCE_PATH,
-                    ITEMS_RESOURCE_PATH,
-                    EMPTY_DISK_PATH,
-                    ITEMS_DISK_PATH
+                    EMPTY_RESOURCE_TEMPLATE.formatted(0),
+                    ITEMS_RESOURCE_TEMPLATE.formatted(0),
+                    EMPTY_DISK_TEMPLATE.formatted(0),
+                    ITEMS_DISK_TEMPLATE.formatted(0)
             );
         }
     }

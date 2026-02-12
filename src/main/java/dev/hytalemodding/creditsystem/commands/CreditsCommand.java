@@ -262,7 +262,7 @@ public final class CreditsCommand extends AbstractPlayerCommand {
                     CreditSystemPlugin.ReloadResult reload = plugin.reloadPluginData();
                     if (reload.success()) {
                         context.sendMessage(Message.raw("[CreditSystem] Reloaded config.json and " + reload.loadedShopFiles() + " shop file(s)."));
-                        context.sendMessage(Message.raw("[CreditSystem] UI theme files updated. Players may need to reconnect to see color/font changes."));
+                        context.sendMessage(Message.raw("[CreditSystem] Theme updated. Close and reopen /creditshop to see changes."));
                     } else {
                         context.sendMessage(Message.raw("[CreditSystem] Reload failed: " + reload.reason()));
                         if (!reload.failures().isEmpty()) {

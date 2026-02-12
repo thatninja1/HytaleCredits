@@ -74,10 +74,16 @@ Storage schema (current):
 
 ### UI Styling (colors/font sizes)
 
-CreditSystem applies `ui.theme` by rewriting stable UI files on disk at startup and on `/credits reload`:
+CreditSystem applies `ui.theme` by writing two pre-created UI slots on disk:
 
-- `Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
-- `Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopEmpty_slot0.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopItems_slot0.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopEmpty_slot1.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopItems_slot1.ui`
+
+On startup, both slots are generated and slot `0` is active. On `/credits reload`, the plugin toggles active slot (`0 ↔ 1`) and rewrites the newly active slot with the latest theme so clients can refresh styles safely without runtime `Style` set commands.
+
+The appended CustomUI document paths are `Pages/Credits/CreditShopEmpty_slot0.ui`, `Pages/Credits/CreditShopItems_slot0.ui`, `Pages/Credits/CreditShopEmpty_slot1.ui`, and `Pages/Credits/CreditShopItems_slot1.ui`.
 
 Runtime `CustomUI Set` calls for `Label.Style` (or `Label.Style.FontSize`) are **not used** because they can disconnect clients on this platform.
 
@@ -107,7 +113,6 @@ Example:
 ```
 
 After changing theme values, run `/credits reload`, then close and reopen `/creditshop` to see updates.
-If clients still see older colors/sizes, reconnect so the updated UI documents are synced.
 
 ## Credit Shop Items (per-category JSON)
 

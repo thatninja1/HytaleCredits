@@ -82,8 +82,8 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
         if ((!ensureUiResourceExists(templates.emptyDiskPath()) || !ensureUiResourceExists(templates.itemsDiskPath())
                 || !validateUiMarkupSafely(templates.emptyDiskPath()) || !validateUiMarkupSafely(templates.itemsDiskPath()))) {
-            logger.warning("[CreditSystem] UI files missing/invalid. Regenerating once.");
-            templates = UiTemplateWriter.writeShopUiFiles(currentConfig(), logger);
+            logger.warning("[CreditSystem] UI files missing/invalid. Regenerating active slot once.");
+            templates = UiTemplateWriter.writeSlotUiFiles(currentConfig(), logger, templates.slot());
         }
 
         boolean canUseThemedFiles = ensureUiResourceExists(templates.emptyDiskPath())
