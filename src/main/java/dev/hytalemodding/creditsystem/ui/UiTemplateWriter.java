@@ -77,6 +77,10 @@ public final class UiTemplateWriter {
 
         String themed = template;
         String titleStyle = style(theme.title(), "Center", 46, "#E5E7EB");
+        if (config.debug()) {
+            logger.info("[CreditSystem] Writing themed UI template " + diskOutputPath
+                    + " with TitleLabel style tuple: (" + titleStyle + ")");
+        }
         themed = applyStyle(themed, "#TitleLabel", titleStyle, logger, sourceResourcePath);
         themed = applyStyle(themed, "#CreditsBalanceLabel", style(theme.credits(), "Center", 24, "#93C5FD"), logger, sourceResourcePath);
         themed = applyStyle(themed, "#CloseButtonLabel", style(theme.closeButton(), "Center", 16, "#E2E8F0"), logger, sourceResourcePath);
@@ -106,12 +110,14 @@ public final class UiTemplateWriter {
         Path outputPath = Path.of(diskOutputPath);
         atomicWrite(outputPath, themed);
 
-        String verify = Files.readString(outputPath, StandardCharsets.UTF_8);
-        boolean containsTitleColor = verify.contains("#TitleLabel") && verify.contains("TextColor: " + theme.title().color());
-        boolean containsTitleSize = verify.contains("#TitleLabel") && verify.contains("FontSize: " + theme.title().fontSize());
-        logger.info("[CreditSystem] Applied theme: TitleLabel => FontSize=" + theme.title().fontSize()
-                + " TextColor=" + theme.title().color() + " (verifiedInFile color=" + containsTitleColor
-                + ", size=" + containsTitleSize + ")");
+        if (config.debug()) {
+            String verify = Files.readString(outputPath, StandardCharsets.UTF_8);
+            boolean containsTitleColor = verify.contains("#TitleLabel") && verify.contains("TextColor: " + theme.title().color());
+            boolean containsTitleSize = verify.contains("#TitleLabel") && verify.contains("FontSize: " + theme.title().fontSize());
+            logger.info("[CreditSystem] Applied theme: TitleLabel => FontSize=" + theme.title().fontSize()
+                    + " TextColor=" + theme.title().color() + " (verifiedInFile color=" + containsTitleColor
+                    + ", size=" + containsTitleSize + ")");
+        }
     }
 
     private static void atomicWrite(Path outputPath, String content) throws IOException {

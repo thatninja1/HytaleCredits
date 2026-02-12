@@ -96,6 +96,9 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         }
 
         CreditConfig config = currentConfig();
+        if (config.debug()) {
+            logger.info("[CreditSystem] /creditshop using in-memory theme: " + summarizeTheme(config.ui().theme()));
+        }
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
         String template = hasCategory ? FALLBACK_ITEMS_TEMPLATE : FALLBACK_EMPTY_TEMPLATE;
         logger.info("[CreditSystem] Appending UI document: " + template);
@@ -124,6 +127,16 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private CreditConfig currentConfig() {
         CreditConfig cfg = configSupplier.get();
         return cfg == null ? CreditConfig.defaults() : cfg;
+    }
+
+    private String summarizeTheme(CreditConfig.UiTheme theme) {
+        if (theme == null) {
+            return "theme=null";
+        }
+        return "title=" + theme.title().color() + "/" + theme.title().fontSize()
+                + ", credits=" + theme.credits().color() + "/" + theme.credits().fontSize()
+                + ", categoryButton=" + theme.categoryButton().color() + "/" + theme.categoryButton().fontSize()
+                + ", itemName=" + theme.itemName().color() + "/" + theme.itemName().fontSize();
     }
 
     private void bindCategoryButtons(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {

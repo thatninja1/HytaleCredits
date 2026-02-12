@@ -80,7 +80,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
 
             try {
                 if (platformBridge != null) {
-                    platformBridge.registerCreditShopCommand(new CreditShopCommand(creditsService, config, logger));
+                    platformBridge.registerCreditShopCommand(new CreditShopCommand(creditsService, logger));
                     logger.info("[CreditSystem] Registered /creditshop");
                 }
             } catch (Exception creditShopRegisterError) {
