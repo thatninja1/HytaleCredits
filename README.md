@@ -74,15 +74,21 @@ Storage schema (current):
 
 ### UI Styling (colors/font sizes)
 
-CreditSystem always appends these stable CustomUI document IDs only:
+CreditSystem uses two fixed CustomUI document slots (same folder, no subfolders):
 
-- `Pages/Credits/CreditShopEmpty.ui`
-- `Pages/Credits/CreditShopItems.ui`
+- `Pages/Credits/CreditShopEmpty-v0.ui`
+- `Pages/Credits/CreditShopEmpty-v1.ui`
+- `Pages/Credits/CreditShopItems-v0.ui`
+- `Pages/Credits/CreditShopItems-v1.ui`
 
-Theme values from `config.json` (`ui.theme.*`) are applied by rewriting the matching disk templates on startup and `/credits reload`:
+Theme values from `config.json` (`ui.theme.*`) are applied by rewriting the matching disk slot templates:
 
-- `Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
-- `Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopEmpty-v0.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopEmpty-v1.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopItems-v0.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopItems-v1.ui`
+
+On startup, both slots are generated. On `/credits reload`, the plugin flips active slot (`v0 ↔ v1`) and rewrites the newly active slot so reopening `/creditshop` uses a new document path and refreshes styles safely.
 
 Runtime `CustomUI Set` calls for `Label.Style` (or `Label.Style.FontSize`) are **not used** because they can disconnect clients on this platform.
 

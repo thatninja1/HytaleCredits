@@ -33,6 +33,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
     private CreditsService creditsService;
     private HytalePlatformBridge platformBridge;
     private CategoryShopLoader shopLoader;
+    private volatile int activeUiSlot = 0;
 
     public CreditSystemPlugin(JavaPluginInit init) {
         super(init);
@@ -56,7 +57,11 @@ public final class CreditSystemPlugin extends JavaPlugin {
         try {
             Files.createDirectories(Path.of("plugins", "CreditSystem"));
             this.config = CreditConfig.loadDefault(logger);
-            UiTemplateWriter.writeThemedTemplates(this.config, logger);
+            this.activeUiSlot = 0;
+            UiTemplateWriter.ensureAllSlotTemplates(this.config, logger);
+            logger.info("[CreditSystem] Active UI slot is now: " + activeUiSlot + " (empty="
+                    + UiTemplateWriter.emptyResourcePath(activeUiSlot) + ", items="
+                    + UiTemplateWriter.itemsResourcePath(activeUiSlot) + ")");
 
             CreditsRepository repository = initializeWithFallback(config);
             if (repository != null) {
@@ -141,7 +146,11 @@ public final class CreditSystemPlugin extends JavaPlugin {
             CategoryShopLoader.ReloadReport report = shopLoader.reloadAllShops(categoryKeys);
 
             this.config = newConfig;
-            UiTemplateWriter.writeThemedTemplates(this.config, logger);
+            this.activeUiSlot = 1 - this.activeUiSlot;
+            UiTemplateWriter.writeThemedTemplatesForSlot(this.config, this.activeUiSlot, logger);
+            logger.info("[CreditSystem] Active UI slot is now: " + activeUiSlot + " (empty="
+                    + UiTemplateWriter.emptyResourcePath(activeUiSlot) + ", items="
+                    + UiTemplateWriter.itemsResourcePath(activeUiSlot) + ")");
 
             if (!report.failures().isEmpty()) {
                 String firstError = report.failures().entrySet().iterator().next().getKey() + " -> "
@@ -159,6 +168,10 @@ public final class CreditSystemPlugin extends JavaPlugin {
         }
     }
 
+
+    public int getActiveUiSlot() {
+        return activeUiSlot;
+    }
 
     public void onDisable() {
         if (creditsService != null) {

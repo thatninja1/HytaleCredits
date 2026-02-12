@@ -18,30 +18,60 @@ public final class UiTemplateWriter {
     private static final String EMPTY_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
     private static final String ITEMS_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
-    public static final String EMPTY_RESOURCE_PATH = "Pages/Credits/CreditShopEmpty.ui";
-    public static final String ITEMS_RESOURCE_PATH = "Pages/Credits/CreditShopItems.ui";
+    private static final String EMPTY_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopEmpty-v%d.ui";
+    private static final String ITEMS_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopItems-v%d.ui";
 
-    public static final String EMPTY_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
-    public static final String ITEMS_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
+    private static final String EMPTY_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty-v%d.ui";
+    private static final String ITEMS_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopItems-v%d.ui";
 
     private UiTemplateWriter() {
     }
 
-    public static void writeThemedTemplates(CreditConfig config, Logger logger) {
+    public static String emptyResourcePath(int slot) {
+        return EMPTY_RESOURCE_TEMPLATE.formatted(normalizeSlot(slot));
+    }
+
+    public static String itemsResourcePath(int slot) {
+        return ITEMS_RESOURCE_TEMPLATE.formatted(normalizeSlot(slot));
+    }
+
+    public static String emptyDiskPath(int slot) {
+        return EMPTY_DISK_TEMPLATE.formatted(normalizeSlot(slot));
+    }
+
+    public static String itemsDiskPath(int slot) {
+        return ITEMS_DISK_TEMPLATE.formatted(normalizeSlot(slot));
+    }
+
+    public static void ensureAllSlotTemplates(CreditConfig config, Logger logger) {
+        writeThemedTemplatesForSlot(config, 0, logger);
+        writeThemedTemplatesForSlot(config, 1, logger);
+    }
+
+    public static void writeThemedTemplatesForSlot(CreditConfig config, int slot, Logger logger) {
+        int safeSlot = normalizeSlot(slot);
         CreditConfig.UiTheme theme = config == null || config.ui() == null ? null : config.ui().theme();
+
+        String emptyOutput = emptyDiskPath(safeSlot);
+        String itemsOutput = itemsDiskPath(safeSlot);
+
         if (theme == null) {
-            logger.info("[CreditSystem] ui.theme missing; preserving existing disk UI files and only ensuring defaults exist.");
-            ensureDefaultExists(EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, logger);
-            ensureDefaultExists(ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, logger);
+            logger.info("[CreditSystem] ui.theme missing; preserving slot files and ensuring defaults exist for slot " + safeSlot + ".");
+            ensureDefaultExists(EMPTY_SOURCE_RESOURCE, emptyOutput, logger);
+            ensureDefaultExists(ITEMS_SOURCE_RESOURCE, itemsOutput, logger);
             return;
         }
 
         try {
-            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, false);
-            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, true);
+            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, emptyOutput, false);
+            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, itemsOutput, true);
         } catch (Exception e) {
-            logger.warning("[CreditSystem] Failed writing themed UI templates: " + e.getMessage());
+            logger.warning("[CreditSystem] Failed writing themed UI templates for slot " + safeSlot + ": " + e.getMessage());
         }
+    }
+
+    private static int normalizeSlot(int slot) {
+        return slot == 1 ? 1 : 0;
     }
 
     private static void ensureDefaultExists(String sourceResourcePath, String diskOutputPath, Logger logger) {
@@ -112,12 +142,23 @@ public final class UiTemplateWriter {
 
         if (config.debug()) {
             String verify = Files.readString(outputPath, StandardCharsets.UTF_8);
-            boolean containsTitleColor = verify.contains("#TitleLabel") && verify.contains("TextColor: " + theme.title().color());
-            boolean containsTitleSize = verify.contains("#TitleLabel") && verify.contains("FontSize: " + theme.title().fontSize());
-            logger.info("[CreditSystem] Applied theme: TitleLabel => FontSize=" + theme.title().fontSize()
-                    + " TextColor=" + theme.title().color() + " (verifiedInFile color=" + containsTitleColor
-                    + ", size=" + containsTitleSize + ")");
+            verifySelectorStyle(verify, "#CreditsBalanceLabel", theme.credits().color(), logger);
+            verifySelectorStyle(verify, "#CategoryButton1Label", theme.categoryButton().color(), logger);
+            verifySelectorStyle(verify, "#ItemCard1Price", theme.itemPrice().color(), logger);
         }
+    }
+
+    private static void verifySelectorStyle(String content, String selector, String expectedColor, Logger logger) {
+        Pattern selectorPattern = Pattern.compile(Pattern.quote(selector) + "\\s*\\{[\\s\\S]*?Style:\\s*\\(([^)]*)\\);", Pattern.MULTILINE);
+        Matcher matcher = selectorPattern.matcher(content);
+        if (!matcher.find()) {
+            logger.warning("[CreditSystem] Theme apply skipped: selector " + selector + " not matched in template");
+            return;
+        }
+        String tuple = matcher.group(1);
+        boolean colorPresent = tuple.contains("TextColor: " + expectedColor);
+        logger.info("[CreditSystem] Verified " + selector + " style tuple contains expected color "
+                + expectedColor + " => " + colorPresent);
     }
 
     private static void atomicWrite(Path outputPath, String content) throws IOException {
@@ -145,7 +186,7 @@ public final class UiTemplateWriter {
         Pattern pattern = Pattern.compile("(" + Pattern.quote(selector) + "\\s*\\{[\\s\\S]*?Style:\\s*\\()([^)]*)(\\);)");
         Matcher matcher = pattern.matcher(content);
         if (!matcher.find()) {
-            logger.warning("[CreditSystem] Could not find selector in template " + sourcePath + ": " + selector);
+            logger.warning("[CreditSystem] Theme apply skipped: selector " + selector + " not matched in template " + sourcePath);
             return content;
         }
         return matcher.replaceFirst(Matcher.quoteReplacement(matcher.group(1) + styleString + matcher.group(3)));
