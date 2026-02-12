@@ -249,9 +249,25 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         if (currentUiCommandBuilder == null) {
             return;
         }
-        currentUiCommandBuilder.set(baseSelector + ".Style.FontSize", String.valueOf(fontSize));
-        currentUiCommandBuilder.set(baseSelector + ".Style.TextColor", color);
-        currentUiCommandBuilder.set(baseSelector + ".Style.Alignment", alignment);
+
+        if (fontSize < 8 || fontSize > 80) {
+            logger.warning("[CreditSystem] Skipping invalid font size for " + baseSelector + ": " + fontSize);
+            return;
+        }
+
+        if (color == null || !color.matches("^#[0-9A-Fa-f]{6}$")) {
+            logger.warning("[CreditSystem] Skipping invalid color for " + baseSelector + ": " + color);
+            return;
+        }
+
+        String safeAlignment = "Center".equals(alignment) || "Start".equals(alignment)
+                ? alignment
+                : "Start";
+
+        String styleValue = "(FontSize: " + fontSize
+                + ", Alignment: " + safeAlignment
+                + ", TextColor: " + color + ")";
+        currentUiCommandBuilder.set(baseSelector + ".Style", styleValue);
     }
 
     private CreditConfig.TextStyle resolveStyle(CreditConfig.TextStyle global, CreditConfig.TextStyle category, CreditConfig.TextStyle item) {

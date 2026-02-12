@@ -82,28 +82,28 @@ Each style object supports:
 
 Invalid values are ignored with a warning and safe defaults are used.
 
-Example:
+Example (current field names used by this repo):
 
 ```json
 {
   "ui": {
     "title": "Credit Shop",
     "theme": {
-      "title": { "color": "#E5E7EB", "fontSize": 46 },
-      "credits": { "color": "#93C5FD", "fontSize": 24 },
-      "selectedCategory": { "color": "#CBD5E1", "fontSize": 20 },
-      "categoryButton": { "color": "#FDE047", "fontSize": 18 },
-      "closeButton": { "color": "#E2E8F0", "fontSize": 16 },
-      "pageIndicator": { "color": "#808080", "fontSize": 18 },
-      "paginationButton": { "color": "#E2E8F0", "fontSize": 16 },
-      "itemName": { "color": "#F8FAFC", "fontSize": 20 },
-      "itemPrice": { "color": "#FDE047", "fontSize": 18 },
-      "itemDescription": { "color": "#CBD5E1", "fontSize": 13 },
-      "buyLabel": { "color": "#E2E8F0", "fontSize": 16 }
+      "title": { "fontSize": 42, "color": "#FFFFFF" },
+      "credits": { "fontSize": 22, "color": "#8FAAFC" },
+      "categoryButton": { "fontSize": 22, "color": "#FDE047" },
+      "itemName": { "fontSize": 20, "color": "#F8FAFC" },
+      "itemPrice": { "fontSize": 18, "color": "#FDE047" },
+      "itemDescription": { "fontSize": 13, "color": "#CBD5E1" },
+      "buyLabel": { "fontSize": 16, "color": "#E2E8F0" },
+      "pageIndicator": { "fontSize": 18, "color": "#E5E7EB" },
+      "paginationButton": { "fontSize": 16, "color": "#E2E8F0" }
     }
   }
 }
 ```
+
+Alignment is not configured in JSON in this repo; it is fixed per-label by UI role (`Center` or `Start`).
 
 ## Credit Shop Items (per-category JSON)
 
@@ -150,10 +150,10 @@ Full example:
       "say {player} unlocked VIP!"
     ],
     "styles": {
-      "name": { "color": "#FFFFFF", "fontSize": 22 },
-      "price": { "color": "#FDE047", "fontSize": 19 },
-      "description": { "color": "#CBD5E1", "fontSize": 14 },
-      "buy": { "color": "#E2E8F0", "fontSize": 16 }
+      "name": { "fontSize": 22, "color": "#FFFFFF" },
+      "price": { "fontSize": 18, "color": "#FDE047" },
+      "description": { "fontSize": 13, "color": "#CBD5E1" },
+      "buy": { "fontSize": 16, "color": "#E2E8F0" }
     }
   },
   "item2": {
@@ -183,7 +183,7 @@ The runtime style merge order is:
 
 ### Runtime CustomUI styling safety
 
-Hytale CustomUI does not support setting Style structs directly at runtime. This plugin applies font size + color by setting Style subfields (`.Style.FontSize`, `.Style.TextColor`, `.Style.Alignment`).
+Hytale CustomUI in this project should not be sent nested style-member sets at runtime (for example `.Style.FontSize`). This plugin applies text style with a single `.Style` assignment using a full style struct string, e.g. `(FontSize: 38, Alignment: Center, TextColor: #8FAAFC)`.
 
 ### Description wrapping
 
