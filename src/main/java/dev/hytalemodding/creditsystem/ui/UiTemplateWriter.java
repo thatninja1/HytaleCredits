@@ -18,32 +18,27 @@ public final class UiTemplateWriter {
     private static final String EMPTY_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
     private static final String ITEMS_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
-    private static final String GENERATED_DIR_RESOURCE = "Pages/Credits/generated";
-    private static final String GENERATED_DIR_DISK = "Common/UI/Custom/Pages/Credits/generated";
+    private static final String EMPTY_RESOURCE_PATH = "Pages/Credits/CreditShopEmpty.ui";
+    private static final String ITEMS_RESOURCE_PATH = "Pages/Credits/CreditShopItems.ui";
+
+    private static final String EMPTY_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
+    private static final String ITEMS_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
     private UiTemplateWriter() {
     }
 
     public static GeneratedTemplates writeShopUiFiles(CreditConfig config, Logger logger) {
         String hash = computeThemeHash(config);
-        String emptyName = "CreditShopEmpty-" + hash + ".ui";
-        logger.info("[CreditSystem] Generated UI theme hash=" + hash);
-        String itemsName = "CreditShopItems-" + hash + ".ui";
-
-        String emptyResourcePath = GENERATED_DIR_RESOURCE + "/" + emptyName;
-        String itemsResourcePath = GENERATED_DIR_RESOURCE + "/" + itemsName;
-        String emptyDiskPath = GENERATED_DIR_DISK + "/" + emptyName;
-        String itemsDiskPath = GENERATED_DIR_DISK + "/" + itemsName;
+        logger.info("[CreditSystem] Applying UI theme hash=" + hash + " to stable UI template files.");
 
         try {
-            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, emptyDiskPath, false);
-            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, itemsDiskPath, true);
-            cleanupOldGeneratedFiles(logger, emptyName, itemsName);
+            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, false);
+            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, true);
         } catch (Exception e) {
             logger.warning("[CreditSystem] Failed writing themed UI templates: " + e.getMessage());
         }
 
-        GeneratedTemplates templates = new GeneratedTemplates(hash, emptyResourcePath, itemsResourcePath, emptyDiskPath, itemsDiskPath);
+        GeneratedTemplates templates = new GeneratedTemplates(hash, EMPTY_RESOURCE_PATH, ITEMS_RESOURCE_PATH, EMPTY_DISK_PATH, ITEMS_DISK_PATH);
         logger.info("[CreditSystem] Active UI templates: empty=" + templates.emptyResourcePath() + " items=" + templates.itemsResourcePath());
         return templates;
     }
@@ -86,10 +81,6 @@ public final class UiTemplateWriter {
                 themed = applyStyle(themed, "#ItemCard" + i + "Desc", style(theme.itemDescription(), "Start", 13, "#CBD5E1"), logger, sourceResourcePath);
                 themed = applyStyle(themed, "#ItemCard" + i + "BuyLabel", style(theme.buyLabel(), "Center", 16, "#E2E8F0"), logger, sourceResourcePath);
             }
-
-            themed = themed.replace("Anchor: (Left: -8, Width: 1028, Height: 480);", "Anchor: (Left: -8, Width: 1028, Height: 480);");
-            themed = themed.replace("Anchor: (Top: 0, Left: -150, Width: 1028, Height: 406);", "Anchor: (Top: 0, Left: -150, Width: 1028, Height: 406);");
-            themed = themed.replace("Anchor: (Top: 406, Left: -150, Width: 1028, Height: 50);", "Anchor: (Top: 406, Left: -150, Width: 1028, Height: 50);");
         }
 
         Path diskPath = Path.of(diskOutputPath);
@@ -105,31 +96,6 @@ public final class UiTemplateWriter {
                 return null;
             }
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
-
-    private static void cleanupOldGeneratedFiles(Logger logger, String activeEmptyFile, String activeItemsFile) {
-        try {
-            Path generatedDir = Path.of(GENERATED_DIR_DISK);
-            if (!Files.exists(generatedDir)) {
-                return;
-            }
-            try (var paths = Files.list(generatedDir)) {
-                paths.forEach(path -> {
-                    String name = path.getFileName().toString();
-                    boolean staleEmpty = name.startsWith("CreditShopEmpty-") && !name.equals(activeEmptyFile);
-                    boolean staleItems = name.startsWith("CreditShopItems-") && !name.equals(activeItemsFile);
-                    if (staleEmpty || staleItems) {
-                        try {
-                            Files.deleteIfExists(path);
-                        } catch (IOException deleteError) {
-                            logger.warning("[CreditSystem] Failed deleting stale generated UI file " + path + ": " + deleteError.getMessage());
-                        }
-                    }
-                });
-            }
-        } catch (Exception listError) {
-            logger.warning("[CreditSystem] Failed to clean stale generated UI files: " + listError.getMessage());
         }
     }
 
@@ -187,10 +153,10 @@ public final class UiTemplateWriter {
         public static GeneratedTemplates defaults() {
             return new GeneratedTemplates(
                     "builtin",
-                    "Pages/Credits/CreditShopEmpty.ui",
-                    "Pages/Credits/CreditShopItems.ui",
-                    "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui",
-                    "Common/UI/Custom/Pages/Credits/CreditShopItems.ui"
+                    EMPTY_RESOURCE_PATH,
+                    ITEMS_RESOURCE_PATH,
+                    EMPTY_DISK_PATH,
+                    ITEMS_DISK_PATH
             );
         }
     }

@@ -74,14 +74,14 @@ Storage schema (current):
 
 ### UI Styling (colors/font sizes)
 
-CreditSystem applies `ui.theme` by generating UI files on disk at startup and on `/credits reload`:
+CreditSystem applies `ui.theme` by rewriting stable UI files on disk at startup and on `/credits reload`:
 
-- `Common/UI/Custom/Pages/Credits/generated/CreditShopEmpty-<hash>.ui`
-- `Common/UI/Custom/Pages/Credits/generated/CreditShopItems-<hash>.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
+- `Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
 
 Runtime `CustomUI Set` calls for `Label.Style` (or `Label.Style.FontSize`) are **not used** because they can disconnect clients on this platform.
 
-Use `ui.theme` in `config.json` to control `TextColor` and `FontSize` values that are baked into the generated `.ui` files.
+Use `ui.theme` in `config.json` to control `TextColor` and `FontSize` values that are baked into those `.ui` files.
 
 Example:
 
@@ -107,7 +107,7 @@ Example:
 ```
 
 After changing theme values, run `/credits reload`, then close and reopen `/creditshop` to see updates.
-The generated file name includes a short hash, so each theme change creates a new versioned UI filename for cache-busting.
+If clients still see older colors/sizes, reconnect so the updated UI documents are synced.
 
 ## Credit Shop Items (per-category JSON)
 

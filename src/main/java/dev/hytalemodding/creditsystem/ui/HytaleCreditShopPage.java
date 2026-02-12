@@ -82,16 +82,16 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
         if ((!ensureUiResourceExists(templates.emptyDiskPath()) || !ensureUiResourceExists(templates.itemsDiskPath())
                 || !validateUiMarkupSafely(templates.emptyDiskPath()) || !validateUiMarkupSafely(templates.itemsDiskPath()))) {
-            logger.warning("[CreditSystem] Generated UI files missing/invalid. Regenerating once.");
+            logger.warning("[CreditSystem] UI files missing/invalid. Regenerating once.");
             templates = UiTemplateWriter.writeShopUiFiles(currentConfig(), logger);
         }
 
-        boolean canUseGenerated = ensureUiResourceExists(templates.emptyDiskPath())
+        boolean canUseThemedFiles = ensureUiResourceExists(templates.emptyDiskPath())
                 && ensureUiResourceExists(templates.itemsDiskPath())
                 && validateUiMarkupSafely(templates.emptyDiskPath())
                 && validateUiMarkupSafely(templates.itemsDiskPath());
 
-        if (!canUseGenerated) {
+        if (!canUseThemedFiles) {
             logger.warning("[CreditSystem] Falling back to bundled UI templates.");
             if (!ensureUiResourceExists(FALLBACK_EMPTY_DISK) || !ensureUiResourceExists(FALLBACK_ITEMS_DISK)
                     || !validateUiMarkupSafely(FALLBACK_EMPTY_DISK) || !validateUiMarkupSafely(FALLBACK_ITEMS_DISK)) {
@@ -103,7 +103,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
         CreditConfig config = currentConfig();
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
-        String template = canUseGenerated
+        String template = canUseThemedFiles
                 ? (hasCategory ? templates.itemsResourcePath() : templates.emptyResourcePath())
                 : (hasCategory ? FALLBACK_ITEMS_TEMPLATE : FALLBACK_EMPTY_TEMPLATE);
         logger.info("[CreditSystem] Appending UI document: " + template);
@@ -458,11 +458,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             if (Files.exists(diskPath)) {
                 logger.info("[CreditSystem] UI resource exists: " + diskPath.toAbsolutePath());
                 return true;
-            }
-
-            if (resourcePath.contains("/generated/")) {
-                logger.warning("[CreditSystem] Generated UI resource missing on disk: " + resourcePath);
-                return false;
             }
 
             try (InputStream stream = getClass().getResourceAsStream("/" + resourcePath)) {
