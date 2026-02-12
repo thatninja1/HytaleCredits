@@ -33,11 +33,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class HytaleCreditShopPage extends CustomUIPage {
-    private static final String EMPTY_TEMPLATE = "Pages/Credits/CreditShopEmpty.ui";
-    private static final String ITEMS_TEMPLATE = "Pages/Credits/CreditShopItems.ui";
+    private static final String FALLBACK_EMPTY_TEMPLATE = "Pages/Credits/CreditShopEmpty.ui";
+    private static final String FALLBACK_ITEMS_TEMPLATE = "Pages/Credits/CreditShopItems.ui";
 
-    private static final String EMPTY_RESOURCE_PATH = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
-    private static final String ITEMS_RESOURCE_PATH = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
+    private static final String FALLBACK_EMPTY_DISK = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
+    private static final String FALLBACK_ITEMS_DISK = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
     private static final int MAX_CATEGORY_BUTTONS = 12;
     private static final int PAGE_SIZE = 5;
     private static final int DESCRIPTION_MAX_LINES = 6;
@@ -45,6 +45,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     private final CreditsService creditsService;
     private final Supplier<CreditConfig> configSupplier;
+    private final Supplier<UiTemplateWriter.GeneratedTemplates> templatesSupplier;
     private final Logger logger;
     private final CategoryShopLoader shopLoader;
 
@@ -55,11 +56,13 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     public HytaleCreditShopPage(PlayerRef playerRef,
                                 CreditsService creditsService,
                                 Supplier<CreditConfig> configSupplier,
+                                Supplier<UiTemplateWriter.GeneratedTemplates> templatesSupplier,
                                 CategoryShopLoader shopLoader,
                                 Logger logger) {
         super(playerRef, CustomPageLifetime.CanDismiss);
         this.creditsService = creditsService;
         this.configSupplier = configSupplier;
+        this.templatesSupplier = templatesSupplier;
         this.shopLoader = shopLoader;
         this.logger = logger;
         this.currentPage = 0;
@@ -72,22 +75,37 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     @Override
     public void build(Ref<EntityStore> ref, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, Store<EntityStore> store) {
-        if (!validateUiMarkupSafely(EMPTY_RESOURCE_PATH) || !validateUiMarkupSafely(ITEMS_RESOURCE_PATH)) {
-            logger.severe("[CreditSystem] Credit shop UI validation failed; refusing to open page.");
-            playerRef.sendMessage(Message.raw("Failed to open Credit Shop UI (invalid UI markup)."));
-            close();
-            return;
+        UiTemplateWriter.GeneratedTemplates templates = templatesSupplier.get();
+        if (templates == null) {
+            templates = UiTemplateWriter.GeneratedTemplates.defaults();
         }
 
-        if (!ensureUiResourceExists(EMPTY_RESOURCE_PATH) || !ensureUiResourceExists(ITEMS_RESOURCE_PATH)) {
-            playerRef.sendMessage(Message.raw("Failed to open Credit Shop UI (resource missing)."));
-            close();
-            return;
+        if ((!ensureUiResourceExists(templates.emptyDiskPath()) || !ensureUiResourceExists(templates.itemsDiskPath())
+                || !validateUiMarkupSafely(templates.emptyDiskPath()) || !validateUiMarkupSafely(templates.itemsDiskPath()))) {
+            logger.warning("[CreditSystem] Generated UI files missing/invalid. Regenerating once.");
+            templates = UiTemplateWriter.writeShopUiFiles(currentConfig(), logger);
+        }
+
+        boolean canUseGenerated = ensureUiResourceExists(templates.emptyDiskPath())
+                && ensureUiResourceExists(templates.itemsDiskPath())
+                && validateUiMarkupSafely(templates.emptyDiskPath())
+                && validateUiMarkupSafely(templates.itemsDiskPath());
+
+        if (!canUseGenerated) {
+            logger.warning("[CreditSystem] Falling back to bundled UI templates.");
+            if (!ensureUiResourceExists(FALLBACK_EMPTY_DISK) || !ensureUiResourceExists(FALLBACK_ITEMS_DISK)
+                    || !validateUiMarkupSafely(FALLBACK_EMPTY_DISK) || !validateUiMarkupSafely(FALLBACK_ITEMS_DISK)) {
+                playerRef.sendMessage(Message.raw("Failed to open Credit Shop UI (resource missing)."));
+                close();
+                return;
+            }
         }
 
         CreditConfig config = currentConfig();
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
-        String template = hasCategory ? ITEMS_TEMPLATE : EMPTY_TEMPLATE;
+        String template = canUseGenerated
+                ? (hasCategory ? templates.itemsResourcePath() : templates.emptyResourcePath())
+                : (hasCategory ? FALLBACK_ITEMS_TEMPLATE : FALLBACK_EMPTY_TEMPLATE);
         uiCommandBuilder.append(template);
 
         uiCommandBuilder.set("#TitleLabel.Text", config.ui().title());
@@ -439,6 +457,11 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             if (Files.exists(diskPath)) {
                 logger.info("[CreditSystem] UI resource exists: " + diskPath.toAbsolutePath());
                 return true;
+            }
+
+            if (resourcePath.contains("/_generated/")) {
+                logger.warning("[CreditSystem] Generated UI resource missing on disk: " + resourcePath);
+                return false;
             }
 
             try (InputStream stream = getClass().getResourceAsStream("/" + resourcePath)) {

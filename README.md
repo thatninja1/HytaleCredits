@@ -76,8 +76,8 @@ Storage schema (current):
 
 CreditSystem applies `ui.theme` by generating UI files on disk at startup and on `/credits reload`:
 
-- `Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
-- `Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
+- `Common/UI/Custom/Pages/Credits/_generated/CreditShopEmpty_<hash>.ui`
+- `Common/UI/Custom/Pages/Credits/_generated/CreditShopItems_<hash>.ui`
 
 Runtime `CustomUI Set` calls for `Label.Style` (or `Label.Style.FontSize`) are **not used** because they can disconnect clients on this platform.
 
@@ -107,6 +107,7 @@ Example:
 ```
 
 After changing theme values, run `/credits reload`, then close and reopen `/creditshop` to see updates.
+The generated file name includes a short hash, so each theme change creates a new versioned UI filename for cache-busting.
 
 ## Credit Shop Items (per-category JSON)
 

@@ -33,6 +33,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
     private CreditsService creditsService;
     private HytalePlatformBridge platformBridge;
     private CategoryShopLoader shopLoader;
+    private volatile UiTemplateWriter.GeneratedTemplates activeShopUiTemplates = UiTemplateWriter.GeneratedTemplates.defaults();
 
     public CreditSystemPlugin(JavaPluginInit init) {
         super(init);
@@ -56,7 +57,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
         try {
             Files.createDirectories(Path.of("plugins", "CreditSystem"));
             this.config = CreditConfig.loadDefault(logger);
-            UiTemplateWriter.writeShopUiFiles(this.config, logger);
+            this.activeShopUiTemplates = UiTemplateWriter.writeShopUiFiles(this.config, logger);
 
             CreditsRepository repository = initializeWithFallback(config);
             if (repository != null) {
@@ -142,7 +143,7 @@ public final class CreditSystemPlugin extends JavaPlugin {
             CategoryShopLoader.ReloadReport report = shopLoader.reloadAllShops(categoryKeys);
 
             this.config = newConfig;
-            UiTemplateWriter.writeShopUiFiles(this.config, logger);
+            this.activeShopUiTemplates = UiTemplateWriter.writeShopUiFiles(this.config, logger);
 
             if (!report.failures().isEmpty()) {
                 String firstError = report.failures().entrySet().iterator().next().getKey() + " -> "
@@ -158,6 +159,11 @@ public final class CreditSystemPlugin extends JavaPlugin {
             logger.log(Level.SEVERE, "[CreditSystem] Reload failed", reloadError);
             return new ReloadResult(false, 0, Map.of(), reloadError.getMessage() == null ? "unknown" : reloadError.getMessage());
         }
+    }
+
+
+    public UiTemplateWriter.GeneratedTemplates getActiveShopUiTemplates() {
+        return activeShopUiTemplates == null ? UiTemplateWriter.GeneratedTemplates.defaults() : activeShopUiTemplates;
     }
 
     public void onDisable() {

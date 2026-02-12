@@ -32,7 +32,7 @@ public final class HytaleCommandBridge implements HytalePlatformBridge {
     @Override
     public void registerCreditShopCommand(CreditShopCommand command) {
         CommandRegistry registry = plugin.getCommandRegistry();
-        registry.registerCommand(new CreditShopOpenCommand(command.creditsService(), plugin::getCreditConfig, shopLoader, command.logger()));
+        registry.registerCommand(new CreditShopOpenCommand(command.creditsService(), plugin::getCreditConfig, plugin::getActiveShopUiTemplates, shopLoader, command.logger()));
     }
 
     @Override
