@@ -106,6 +106,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         String template = canUseGenerated
                 ? (hasCategory ? templates.itemsResourcePath() : templates.emptyResourcePath())
                 : (hasCategory ? FALLBACK_ITEMS_TEMPLATE : FALLBACK_EMPTY_TEMPLATE);
+        logger.info("[CreditSystem] Appending UI document: " + template);
         uiCommandBuilder.append(template);
 
         uiCommandBuilder.set("#TitleLabel.Text", config.ui().title());
@@ -459,7 +460,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                 return true;
             }
 
-            if (resourcePath.contains("/_generated/")) {
+            if (resourcePath.contains("/generated/")) {
                 logger.warning("[CreditSystem] Generated UI resource missing on disk: " + resourcePath);
                 return false;
             }

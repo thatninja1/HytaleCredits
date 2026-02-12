@@ -18,16 +18,17 @@ public final class UiTemplateWriter {
     private static final String EMPTY_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
     private static final String ITEMS_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
-    private static final String GENERATED_DIR_RESOURCE = "Pages/Credits/_generated";
-    private static final String GENERATED_DIR_DISK = "Common/UI/Custom/Pages/Credits/_generated";
+    private static final String GENERATED_DIR_RESOURCE = "Pages/Credits/generated";
+    private static final String GENERATED_DIR_DISK = "Common/UI/Custom/Pages/Credits/generated";
 
     private UiTemplateWriter() {
     }
 
     public static GeneratedTemplates writeShopUiFiles(CreditConfig config, Logger logger) {
         String hash = computeThemeHash(config);
-        String emptyName = "CreditShopEmpty_" + hash + ".ui";
-        String itemsName = "CreditShopItems_" + hash + ".ui";
+        String emptyName = "CreditShopEmpty-" + hash + ".ui";
+        logger.info("[CreditSystem] Generated UI theme hash=" + hash);
+        String itemsName = "CreditShopItems-" + hash + ".ui";
 
         String emptyResourcePath = GENERATED_DIR_RESOURCE + "/" + emptyName;
         String itemsResourcePath = GENERATED_DIR_RESOURCE + "/" + itemsName;
@@ -116,8 +117,8 @@ public final class UiTemplateWriter {
             try (var paths = Files.list(generatedDir)) {
                 paths.forEach(path -> {
                     String name = path.getFileName().toString();
-                    boolean staleEmpty = name.startsWith("CreditShopEmpty_") && !name.equals(activeEmptyFile);
-                    boolean staleItems = name.startsWith("CreditShopItems_") && !name.equals(activeItemsFile);
+                    boolean staleEmpty = name.startsWith("CreditShopEmpty-") && !name.equals(activeEmptyFile);
+                    boolean staleItems = name.startsWith("CreditShopItems-") && !name.equals(activeItemsFile);
                     if (staleEmpty || staleItems) {
                         try {
                             Files.deleteIfExists(path);
