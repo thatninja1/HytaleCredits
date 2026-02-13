@@ -18,60 +18,30 @@ public final class UiTemplateWriter {
     private static final String EMPTY_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
     private static final String ITEMS_SOURCE_RESOURCE = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
-    private static final String EMPTY_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopEmpty-v%d.ui";
-    private static final String ITEMS_RESOURCE_TEMPLATE = "Pages/Credits/CreditShopItems-v%d.ui";
+    public static final String EMPTY_RESOURCE_PATH = "Pages/Credits/CreditShopEmpty.ui";
+    public static final String ITEMS_RESOURCE_PATH = "Pages/Credits/CreditShopItems.ui";
 
-    private static final String EMPTY_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopEmpty-v%d.ui";
-    private static final String ITEMS_DISK_TEMPLATE = "Common/UI/Custom/Pages/Credits/CreditShopItems-v%d.ui";
+    public static final String EMPTY_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui";
+    public static final String ITEMS_DISK_PATH = "Common/UI/Custom/Pages/Credits/CreditShopItems.ui";
 
     private UiTemplateWriter() {
     }
 
-    public static String emptyResourcePath(int slot) {
-        return EMPTY_RESOURCE_TEMPLATE.formatted(normalizeSlot(slot));
-    }
-
-    public static String itemsResourcePath(int slot) {
-        return ITEMS_RESOURCE_TEMPLATE.formatted(normalizeSlot(slot));
-    }
-
-    public static String emptyDiskPath(int slot) {
-        return EMPTY_DISK_TEMPLATE.formatted(normalizeSlot(slot));
-    }
-
-    public static String itemsDiskPath(int slot) {
-        return ITEMS_DISK_TEMPLATE.formatted(normalizeSlot(slot));
-    }
-
-    public static void ensureAllSlotTemplates(CreditConfig config, Logger logger) {
-        writeThemedTemplatesForSlot(config, 0, logger);
-        writeThemedTemplatesForSlot(config, 1, logger);
-    }
-
-    public static void writeThemedTemplatesForSlot(CreditConfig config, int slot, Logger logger) {
-        int safeSlot = normalizeSlot(slot);
+    public static void writeThemedTemplates(CreditConfig config, Logger logger) {
         CreditConfig.UiTheme theme = config == null || config.ui() == null ? null : config.ui().theme();
-
-        String emptyOutput = emptyDiskPath(safeSlot);
-        String itemsOutput = itemsDiskPath(safeSlot);
-
         if (theme == null) {
-            logger.info("[CreditSystem] ui.theme missing; preserving slot files and ensuring defaults exist for slot " + safeSlot + ".");
-            ensureDefaultExists(EMPTY_SOURCE_RESOURCE, emptyOutput, logger);
-            ensureDefaultExists(ITEMS_SOURCE_RESOURCE, itemsOutput, logger);
+            logger.info("[CreditSystem] ui.theme missing; preserving disk UI files and only ensuring defaults exist.");
+            ensureDefaultExists(EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, logger);
+            ensureDefaultExists(ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, logger);
             return;
         }
 
         try {
-            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, emptyOutput, false);
-            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, itemsOutput, true);
+            writeOne(config, logger, EMPTY_SOURCE_RESOURCE, EMPTY_DISK_PATH, false);
+            writeOne(config, logger, ITEMS_SOURCE_RESOURCE, ITEMS_DISK_PATH, true);
         } catch (Exception e) {
-            logger.warning("[CreditSystem] Failed writing themed UI templates for slot " + safeSlot + ": " + e.getMessage());
+            logger.warning("[CreditSystem] Failed writing themed UI templates: " + e.getMessage());
         }
-    }
-
-    private static int normalizeSlot(int slot) {
-        return slot == 1 ? 1 : 0;
     }
 
     private static void ensureDefaultExists(String sourceResourcePath, String diskOutputPath, Logger logger) {
@@ -106,12 +76,7 @@ public final class UiTemplateWriter {
         CreditConfig.UiTheme theme = config.ui().theme();
 
         String themed = template;
-        String titleStyle = style(theme.title(), "Center", 46, "#E5E7EB");
-        if (config.debug()) {
-            logger.info("[CreditSystem] Writing themed UI template " + diskOutputPath
-                    + " with TitleLabel style tuple: (" + titleStyle + ")");
-        }
-        themed = applyStyle(themed, "#TitleLabel", titleStyle, logger, sourceResourcePath);
+        themed = applyStyle(themed, "#TitleLabel", style(theme.title(), "Center", 46, "#E5E7EB"), logger, sourceResourcePath);
         themed = applyStyle(themed, "#CreditsBalanceLabel", style(theme.credits(), "Center", 24, "#93C5FD"), logger, sourceResourcePath);
         themed = applyStyle(themed, "#CloseButtonLabel", style(theme.closeButton(), "Center", 16, "#E2E8F0"), logger, sourceResourcePath);
 
@@ -142,23 +107,41 @@ public final class UiTemplateWriter {
 
         if (config.debug()) {
             String verify = Files.readString(outputPath, StandardCharsets.UTF_8);
-            verifySelectorStyle(verify, "#CreditsBalanceLabel", theme.credits().color(), logger);
-            verifySelectorStyle(verify, "#CategoryButton1Label", theme.categoryButton().color(), logger);
-            verifySelectorStyle(verify, "#ItemCard1Price", theme.itemPrice().color(), logger);
+            logSelectorStyle(verify, "#TitleLabel", logger);
+            logSelectorStyle(verify, "#CreditsBalanceLabel", logger);
+            logSelectorStyle(verify, "#CategoryButton1Label", logger);
+            logSelectorStyle(verify, "#ItemCard1Name", logger);
         }
     }
 
-    private static void verifySelectorStyle(String content, String selector, String expectedColor, Logger logger) {
+    private static void logSelectorStyle(String content, String selector, Logger logger) {
         Pattern selectorPattern = Pattern.compile(Pattern.quote(selector) + "\\s*\\{[\\s\\S]*?Style:\\s*\\(([^)]*)\\);", Pattern.MULTILINE);
         Matcher matcher = selectorPattern.matcher(content);
         if (!matcher.find()) {
-            logger.warning("[CreditSystem] Theme apply skipped: selector " + selector + " not matched in template");
+            logger.warning("[CreditSystem] Theme apply skipped: selector " + selector + " not matched in themed file");
             return;
         }
+
         String tuple = matcher.group(1);
-        boolean colorPresent = tuple.contains("TextColor: " + expectedColor);
-        logger.info("[CreditSystem] Verified " + selector + " style tuple contains expected color "
-                + expectedColor + " => " + colorPresent);
+        String color = extract(tuple, "TextColor:");
+        String font = extract(tuple, "FontSize:");
+        logger.info("[CreditSystem] Themed selector " + selector + " => TextColor=" + color + ", FontSize=" + font);
+    }
+
+    private static String extract(String tuple, String key) {
+        int start = tuple.indexOf(key);
+        if (start < 0) {
+            return "missing";
+        }
+        int valueStart = start + key.length();
+        while (valueStart < tuple.length() && Character.isWhitespace(tuple.charAt(valueStart))) {
+            valueStart++;
+        }
+        int end = tuple.indexOf(',', valueStart);
+        if (end < 0) {
+            end = tuple.length();
+        }
+        return tuple.substring(valueStart, end).trim();
     }
 
     private static void atomicWrite(Path outputPath, String content) throws IOException {

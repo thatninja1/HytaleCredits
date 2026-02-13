@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,7 +40,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     private final CreditsService creditsService;
     private final Supplier<CreditConfig> configSupplier;
-    private final IntSupplier activeSlotSupplier;
     private final Logger logger;
     private final CategoryShopLoader shopLoader;
 
@@ -52,13 +50,11 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     public HytaleCreditShopPage(PlayerRef playerRef,
                                 CreditsService creditsService,
                                 Supplier<CreditConfig> configSupplier,
-                                IntSupplier activeSlotSupplier,
                                 CategoryShopLoader shopLoader,
                                 Logger logger) {
         super(playerRef, CustomPageLifetime.CanDismiss);
         this.creditsService = creditsService;
         this.configSupplier = configSupplier;
-        this.activeSlotSupplier = activeSlotSupplier;
         this.shopLoader = shopLoader;
         this.logger = logger;
         this.currentPage = 0;
@@ -71,22 +67,18 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     @Override
     public void build(Ref<EntityStore> ref, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, Store<EntityStore> store) {
-        int slot = normalizeSlot(activeSlotSupplier.getAsInt());
-        String emptyDisk = UiTemplateWriter.emptyDiskPath(slot);
-        String itemsDisk = UiTemplateWriter.itemsDiskPath(slot);
-
-        if ((!ensureUiResourceExists(emptyDisk)
-                || !ensureUiResourceExists(itemsDisk)
-                || !validateUiMarkupSafely(emptyDisk)
-                || !validateUiMarkupSafely(itemsDisk))) {
-            logger.warning("[CreditSystem] UI files missing/invalid for slot " + slot + ". Regenerating slot once.");
-            UiTemplateWriter.writeThemedTemplatesForSlot(currentConfig(), slot, logger);
+        if ((!ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
+                || !ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
+                || !validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
+                || !validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH))) {
+            logger.warning("[CreditSystem] UI files missing/invalid. Regenerating themed templates once.");
+            UiTemplateWriter.writeThemedTemplates(currentConfig(), logger);
         }
 
-        boolean canUseThemedFiles = ensureUiResourceExists(emptyDisk)
-                && ensureUiResourceExists(itemsDisk)
-                && validateUiMarkupSafely(emptyDisk)
-                && validateUiMarkupSafely(itemsDisk);
+        boolean canUseThemedFiles = ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
+                && ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
+                && validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
+                && validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH);
 
         if (!canUseThemedFiles) {
             playerRef.sendMessage(Message.raw("Failed to open Credit Shop UI (resource missing)."));
@@ -99,7 +91,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             logger.info("[CreditSystem] /creditshop using in-memory theme: " + summarizeTheme(config.ui().theme()));
         }
         boolean hasCategory = selectedCategoryKey != null && !selectedCategoryKey.isBlank();
-        String template = hasCategory ? UiTemplateWriter.itemsResourcePath(slot) : UiTemplateWriter.emptyResourcePath(slot);
+        String template = hasCategory ? UiTemplateWriter.ITEMS_RESOURCE_PATH : UiTemplateWriter.EMPTY_RESOURCE_PATH;
         logger.info("[CreditSystem] Appending UI document: " + template);
         uiCommandBuilder.append(template);
 
@@ -128,9 +120,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         return cfg == null ? CreditConfig.defaults() : cfg;
     }
 
-    private int normalizeSlot(int slot) {
-        return slot == 1 ? 1 : 0;
-    }
 
     private String summarizeTheme(CreditConfig.UiTheme theme) {
         if (theme == null) {
