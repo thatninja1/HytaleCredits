@@ -42,7 +42,7 @@ Group #Root {
       }
 
       Group #MainColumn {
-        Anchor: (Width: 1060, Height: 520);
+        Anchor: (Width: 1060, Height: 480);
 
         Label #CategoryPromptLabel {
           Anchor: (Top: 20, Width: 1060, Height: 36);
