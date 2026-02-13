@@ -102,6 +102,12 @@ Group #Root {
         Group #PaginationRow {
           Anchor: (Top: 510, Left: 16, Width: 1028, Height: 56);
 
+          Label #PageIndicatorLabel {
+            Anchor: (Top: 8, Left: 444, Width: 140, Height: 34);
+            Text: "";
+            Style: (FontSize: 18, Alignment: Center, TextColor: #808080);
+          }
+
           Button #PrevPageButton {
             Anchor: (Left: 284, Top: 6, Width: 150, Height: 38);
             Label #PrevPageButtonLabel {
@@ -109,12 +115,6 @@ Group #Root {
               Text: "Prev";
               Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0);
             }
-          }
-
-          Label #PageIndicatorLabel {
-            Anchor: (Left: 0, Top: 8, Width: 1028, Height: 34);
-            Text: "";
-            Style: (FontSize: 18, Alignment: Center, TextColor: #CBD5E1);
           }
 
           Button #NextPageButton {
