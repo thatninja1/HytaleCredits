@@ -60,7 +60,7 @@ public final class CategoryShopLoader {
                 JsonObject item1 = new JsonObject();
                 item1.addProperty("name", "VIP Rank");
                 item1.addProperty("price", 1000);
-                item1.addProperty("description", "Unlocks VIP permissions, chat prefix, and store perks.");
+                item1.addProperty("description", "Unlocks VIP permissions, chat prefix, extra homes, kit preview commands, and bonus quality-of-life store perks.");
                 JsonArray item1Commands = new JsonArray();
                 item1Commands.add("lp user {player} parent add vip");
                 item1Commands.add("say {player} purchased VIP!");

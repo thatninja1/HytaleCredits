@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 public final class HytaleCreditShopPage extends CustomUIPage {
     private static final int MAX_CATEGORY_BUTTONS = 12;
     private static final int PAGE_SIZE = 5;
-    private static final int DESCRIPTION_MAX_LINES = 6;
+    private static final int DESCRIPTION_MAX_LINES = 10;
     private static final int DESCRIPTION_BASE_CHARS = 22;
 
     private final CreditsService creditsService;
