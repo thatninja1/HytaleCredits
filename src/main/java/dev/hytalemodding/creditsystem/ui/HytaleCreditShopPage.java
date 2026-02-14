@@ -186,7 +186,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         int start = currentPage * PAGE_SIZE;
         int end = Math.min(start + PAGE_SIZE, allItems.size());
         int count = Math.max(0, end - start);
-        int startSlot = ((PAGE_SIZE - count) / 2) + 1;
+        int startSlot = 1;
 
         for (int card = 1; card <= PAGE_SIZE; card++) {
             clearCard(uiCommandBuilder, card);
