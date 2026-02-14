@@ -80,6 +80,8 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     @Override
     public void build(Ref<EntityStore> ref, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, Store<EntityStore> store) {
         CreditConfig config = currentConfig();
+        CreditConfig.UiTheme theme = config.ui().theme();
+        CreditConfig.UiTheme defaultTheme = CreditConfig.defaults().ui().theme();
         boolean canUseThemedFiles;
         if (!uiResourcesChecked || config.debug()) {
             canUseThemedFiles = ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
@@ -111,24 +113,41 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         logger.info("[CreditSystem] Appending UI document: " + template);
         uiCommandBuilder.append(template);
 
-        uiCommandBuilder.set("#TitleLabel.Text", config.ui().title());
+        uiCommandBuilder.set("#TitleLabel.TextSpans", coloredMessage(config.ui().title(), theme.title(), defaultTheme.title()));
         if (!creditsService.isOnline()) {
-            uiCommandBuilder.set("#CreditsBalanceLabel.Text", "Credits system unavailable");
+            uiCommandBuilder.set("#CreditsBalanceLabel.TextSpans", coloredMessage("Credits system unavailable", theme.credits(), defaultTheme.credits()));
         } else {
             long balance = getCachedBalance();
-            uiCommandBuilder.set("#CreditsBalanceLabel.Text", config.currencyName() + ": " + balance);
+            uiCommandBuilder.set("#CreditsBalanceLabel.TextSpans", coloredMessage(config.currencyName() + ": " + balance, theme.credits(), defaultTheme.credits()));
         }
 
         bindCategoryButtons(config, uiCommandBuilder, uiEventBuilder);
         bindCloseButton(uiEventBuilder);
+        uiCommandBuilder.set("#CloseButtonLabel.TextSpans", coloredMessage("Close", theme.closeButton(), defaultTheme.closeButton()));
 
         if (!hasCategory) {
-            uiCommandBuilder.set("#CategoryPromptLabel.Text", "Select a category.");
+            uiCommandBuilder.set("#CategoryPromptLabel.TextSpans", coloredMessage("Select a category.", theme.selectedCategory(), defaultTheme.selectedCategory()));
             return;
         }
 
-        uiCommandBuilder.set("#SelectedCategoryLabel.Text", selectedCategoryName == null ? "" : selectedCategoryName);
-        renderPagedItems(config, uiCommandBuilder, uiEventBuilder);
+        uiCommandBuilder.set("#SelectedCategoryLabel.TextSpans", coloredMessage(selectedCategoryName == null ? "" : selectedCategoryName, theme.selectedCategory(), defaultTheme.selectedCategory()));
+        renderPagedItems(config, uiCommandBuilder, uiEventBuilder, theme, defaultTheme);
+    }
+
+    private static Message coloredMessage(String text, String hex) {
+        Message m = Message.raw(text == null ? "" : text);
+        if (hex != null && !hex.isBlank()) {
+            m.color(hex);
+        }
+        return m;
+    }
+
+    private static Message coloredMessage(String text, CreditConfig.TextStyle style, CreditConfig.TextStyle fallback) {
+        String color = (style != null ? style.color() : null);
+        if (color == null || color.isBlank()) {
+            color = (fallback != null ? fallback.color() : null);
+        }
+        return coloredMessage(text, color);
     }
 
     private CreditConfig currentConfig() {
@@ -149,19 +168,21 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     private void bindCategoryButtons(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
         List<CreditConfig.CategoryEntry> categories = config.categories();
+        CreditConfig.UiTheme theme = config.ui().theme();
+        CreditConfig.UiTheme defaultTheme = CreditConfig.defaults().ui().theme();
         for (int i = 0; i < MAX_CATEGORY_BUTTONS; i++) {
             int slot = i + 1;
-            String labelPath = "#CategoryButton" + slot + "Label.Text";
+            String labelPath = "#CategoryButton" + slot + "Label.TextSpans";
             if (i < categories.size()) {
                 CreditConfig.CategoryEntry category = categories.get(i);
-                uiCommandBuilder.set(labelPath, category.name());
+                uiCommandBuilder.set(labelPath, coloredMessage(category.name(), theme.categoryButton(), defaultTheme.categoryButton()));
                 uiEventBuilder.addEventBinding(
                         CustomUIEventBindingType.Activating,
                         "#CategoryButton" + slot,
                         EventData.of("action", "category:" + category.key())
                 );
             } else {
-                uiCommandBuilder.set(labelPath, "");
+                uiCommandBuilder.set(labelPath, coloredMessage("", theme.categoryButton(), defaultTheme.categoryButton()));
             }
         }
     }
@@ -174,7 +195,11 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         );
     }
 
-    private void renderPagedItems(CreditConfig config, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder) {
+    private void renderPagedItems(CreditConfig config,
+                                  UICommandBuilder uiCommandBuilder,
+                                  UIEventBuilder uiEventBuilder,
+                                  CreditConfig.UiTheme theme,
+                                  CreditConfig.UiTheme defaultTheme) {
         Map<String, ShopItem> itemMap = shopLoader.loadCategoryItems(selectedCategoryKey);
         List<Map.Entry<String, ShopItem>> allItems = new ArrayList<>(itemMap.entrySet());
         if (config.debug()) {
@@ -189,7 +214,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         int startSlot = 1;
 
         for (int card = 1; card <= PAGE_SIZE; card++) {
-            clearCard(uiCommandBuilder, card);
+            clearCard(uiCommandBuilder, card, theme, defaultTheme);
             uiCommandBuilder.set("#ItemCard" + card + "Buy.Visible", false);
         }
 
@@ -198,12 +223,12 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             Map.Entry<String, ShopItem> entry = allItems.get(start + i);
             ShopItem item = entry.getValue();
 
-            uiCommandBuilder.set("#ItemCard" + slot + "Name.Text", item.name());
-            uiCommandBuilder.set("#ItemCard" + slot + "Price.Text", item.price() + " " + config.currencyName());
+            uiCommandBuilder.set("#ItemCard" + slot + "Name.TextSpans", coloredMessage(item.name(), theme.itemName(), defaultTheme.itemName()));
+            uiCommandBuilder.set("#ItemCard" + slot + "Price.TextSpans", coloredMessage(item.price() + " " + config.currencyName(), theme.itemPrice(), defaultTheme.itemPrice()));
 
             int charsPerLine = DESCRIPTION_BASE_CHARS;
-            uiCommandBuilder.set("#ItemCard" + slot + "Desc.Text", wrapForUi(item.description(), charsPerLine, DESCRIPTION_MAX_LINES));
-            uiCommandBuilder.set("#ItemCard" + slot + "BuyLabel.Text", "Buy");
+            uiCommandBuilder.set("#ItemCard" + slot + "Desc.TextSpans", coloredMessage(wrapForUi(item.description(), charsPerLine, DESCRIPTION_MAX_LINES), theme.itemDescription(), defaultTheme.itemDescription()));
+            uiCommandBuilder.set("#ItemCard" + slot + "BuyLabel.TextSpans", coloredMessage("Buy", theme.buyLabel(), defaultTheme.buyLabel()));
             uiCommandBuilder.set("#ItemCard" + slot + "Buy.Visible", true);
 
             uiEventBuilder.addEventBinding(
@@ -213,21 +238,25 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             );
         }
 
-        applyPageControls(uiCommandBuilder, uiEventBuilder, totalPages);
+        applyPageControls(uiCommandBuilder, uiEventBuilder, totalPages, theme, defaultTheme);
     }
 
 
-    private void applyPageControls(UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, int totalPages) {
+    private void applyPageControls(UICommandBuilder uiCommandBuilder,
+                                   UIEventBuilder uiEventBuilder,
+                                   int totalPages,
+                                   CreditConfig.UiTheme theme,
+                                   CreditConfig.UiTheme defaultTheme) {
         boolean hasPrev = currentPage > 0;
         boolean hasNext = currentPage < totalPages - 1;
 
-        uiCommandBuilder.set("#PageIndicatorLabel.Text", "Page " + (currentPage + 1) + "/" + totalPages);
+        uiCommandBuilder.set("#PageIndicatorLabel.TextSpans", coloredMessage("Page " + (currentPage + 1) + "/" + totalPages, theme.pageIndicator(), defaultTheme.pageIndicator()));
 
         uiCommandBuilder.set("#PrevPageButton.Visible", hasPrev);
-        uiCommandBuilder.set("#PrevPageButtonLabel.Text", hasPrev ? "Prev" : "");
+        uiCommandBuilder.set("#PrevPageButtonLabel.TextSpans", coloredMessage(hasPrev ? "Prev" : "", theme.paginationButton(), defaultTheme.paginationButton()));
 
         uiCommandBuilder.set("#NextPageButton.Visible", hasNext);
-        uiCommandBuilder.set("#NextPageButtonLabel.Text", hasNext ? "Next" : "");
+        uiCommandBuilder.set("#NextPageButtonLabel.TextSpans", coloredMessage(hasNext ? "Next" : "", theme.paginationButton(), defaultTheme.paginationButton()));
 
         if (hasPrev) {
             uiEventBuilder.addEventBinding(
@@ -388,11 +417,14 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         return latest;
     }
 
-    private void clearCard(UICommandBuilder uiCommandBuilder, int slot) {
-        uiCommandBuilder.set("#ItemCard" + slot + "Name.Text", "");
-        uiCommandBuilder.set("#ItemCard" + slot + "Price.Text", "");
-        uiCommandBuilder.set("#ItemCard" + slot + "Desc.Text", "");
-        uiCommandBuilder.set("#ItemCard" + slot + "BuyLabel.Text", "");
+    private void clearCard(UICommandBuilder uiCommandBuilder,
+                           int slot,
+                           CreditConfig.UiTheme theme,
+                           CreditConfig.UiTheme defaultTheme) {
+        uiCommandBuilder.set("#ItemCard" + slot + "Name.TextSpans", coloredMessage("", theme.itemName(), defaultTheme.itemName()));
+        uiCommandBuilder.set("#ItemCard" + slot + "Price.TextSpans", coloredMessage("", theme.itemPrice(), defaultTheme.itemPrice()));
+        uiCommandBuilder.set("#ItemCard" + slot + "Desc.TextSpans", coloredMessage("", theme.itemDescription(), defaultTheme.itemDescription()));
+        uiCommandBuilder.set("#ItemCard" + slot + "BuyLabel.TextSpans", coloredMessage("", theme.buyLabel(), defaultTheme.buyLabel()));
     }
 
     private String wrapForUi(String text, int maxCharsPerLine, int maxLines) {

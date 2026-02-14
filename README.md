@@ -79,7 +79,10 @@ CreditSystem appends these stable CustomUI documents:
 - `Pages/Credits/CreditShopEmpty.ui`
 - `Pages/Credits/CreditShopItems.ui`
 
-Theme values from `config.json` (`ui.theme.*`) are applied by rewriting the matching disk templates on startup and `/credits reload`:
+Theme values from `config.json` (`ui.theme.*`) are applied in two ways:
+
+- **Colors** are applied at runtime through `Label.TextSpans` using `Message.color("#RRGGBB")` (same reliable approach used in NinjaTags-style UI rendering).
+- **Font sizes** are applied by rewriting the matching disk templates on startup and `/credits reload`:
 
 - `Common/UI/Custom/Pages/Credits/CreditShopEmpty.ui`
 - `Common/UI/Custom/Pages/Credits/CreditShopItems.ui`
@@ -109,7 +112,7 @@ Example `config.json` snippet:
 }
 ```
 
-After changing theme values, run `/credits reload`, then close and reopen `/creditshop` to see updates. If the client still shows old styles, relog may be required due to client-side UI caching.
+After changing theme values, run `/credits reload`, then close and reopen `/creditshop` (or restart the server) to see updates.
 
 ## Credit Shop Items (per-category JSON)
 
