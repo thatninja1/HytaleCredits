@@ -37,6 +37,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private static final int PAGE_SIZE = 5;
     private static final int DESCRIPTION_MAX_LINES = 10;
     private static final int DESCRIPTION_BASE_CHARS = 22;
+    private static final long BALANCE_TTL_MS = 15000L;
 
     private final CreditsService creditsService;
     private final Supplier<CreditConfig> configSupplier;
@@ -46,6 +47,9 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private String selectedCategoryKey;
     private String selectedCategoryName;
     private int currentPage;
+    private boolean uiResourcesChecked;
+    private Long cachedBalance;
+    private long cachedBalanceAtMs;
 
     public HytaleCreditShopPage(PlayerRef playerRef,
                                 CreditsService creditsService,
@@ -58,6 +62,9 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         this.shopLoader = shopLoader;
         this.logger = logger;
         this.currentPage = 0;
+        this.uiResourcesChecked = false;
+        this.cachedBalance = null;
+        this.cachedBalanceAtMs = 0L;
 
         CreditConfig activeConfig = currentConfig();
         for (CreditConfig.CategoryEntry category : activeConfig.categories()) {
@@ -67,18 +74,20 @@ public final class HytaleCreditShopPage extends CustomUIPage {
 
     @Override
     public void build(Ref<EntityStore> ref, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, Store<EntityStore> store) {
-        if ((!ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
-                || !ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
-                || !validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
-                || !validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH))) {
-            logger.warning("[CreditSystem] UI files missing/invalid. Regenerating themed templates once.");
-            UiTemplateWriter.writeThemedTemplates(currentConfig(), logger);
+        CreditConfig config = currentConfig();
+        if (!uiResourcesChecked || config.debug()) {
+            if ((!ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
+                    || !ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
+                    || !validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
+                    || !validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH))) {
+                logger.warning("[CreditSystem] UI files missing/invalid. Regenerating themed templates once.");
+                UiTemplateWriter.writeThemedTemplates(config, logger);
+            }
+            uiResourcesChecked = true;
         }
 
         boolean canUseThemedFiles = ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
-                && ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
-                && validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
-                && validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH);
+                && ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH);
 
         if (!canUseThemedFiles) {
             playerRef.sendMessage(Message.raw("Failed to open Credit Shop UI (resource missing)."));
@@ -86,7 +95,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             return;
         }
 
-        CreditConfig config = currentConfig();
         if (config.debug()) {
             logger.info("[CreditSystem] /creditshop using in-memory theme: " + summarizeTheme(config.ui().theme()));
         }
@@ -99,7 +107,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         if (!creditsService.isOnline()) {
             uiCommandBuilder.set("#CreditsBalanceLabel.Text", "Credits system unavailable");
         } else {
-            long balance = creditsService.getBalance(playerRef.getUuid(), playerRef.getUsername());
+            long balance = getCachedBalance();
             uiCommandBuilder.set("#CreditsBalanceLabel.Text", config.currencyName() + ": " + balance);
         }
 
@@ -168,29 +176,32 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         int totalPages = Math.max(1, (int) Math.ceil(allItems.size() / (double) PAGE_SIZE));
         currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
         int start = currentPage * PAGE_SIZE;
+        int end = Math.min(start + PAGE_SIZE, allItems.size());
+        int count = Math.max(0, end - start);
 
         for (int card = 1; card <= PAGE_SIZE; card++) {
-            int index = start + (card - 1);
-            if (index < allItems.size()) {
-                Map.Entry<String, ShopItem> entry = allItems.get(index);
-                ShopItem item = entry.getValue();
+            uiCommandBuilder.set("#ItemCard" + card + ".Visible", "false");
+            clearCard(uiCommandBuilder, card);
+        }
 
+        for (int i = 0; i < count; i++) {
+            int slot = i + 1;
+            Map.Entry<String, ShopItem> entry = allItems.get(start + i);
+            ShopItem item = entry.getValue();
 
-                uiCommandBuilder.set("#ItemCard" + card + "Name.Text", item.name());
-                uiCommandBuilder.set("#ItemCard" + card + "Price.Text", item.price() + " " + config.currencyName());
+            uiCommandBuilder.set("#ItemCard" + slot + ".Visible", "true");
+            uiCommandBuilder.set("#ItemCard" + slot + "Name.Text", item.name());
+            uiCommandBuilder.set("#ItemCard" + slot + "Price.Text", item.price() + " " + config.currencyName());
 
-                int charsPerLine = DESCRIPTION_BASE_CHARS;
-                uiCommandBuilder.set("#ItemCard" + card + "Desc.Text", wrapForUi(item.description(), charsPerLine, DESCRIPTION_MAX_LINES));
-                uiCommandBuilder.set("#ItemCard" + card + "BuyLabel.Text", "Buy");
+            int charsPerLine = DESCRIPTION_BASE_CHARS;
+            uiCommandBuilder.set("#ItemCard" + slot + "Desc.Text", wrapForUi(item.description(), charsPerLine, DESCRIPTION_MAX_LINES));
+            uiCommandBuilder.set("#ItemCard" + slot + "BuyLabel.Text", "Buy");
 
-                uiEventBuilder.addEventBinding(
-                        CustomUIEventBindingType.Activating,
-                        "#ItemCard" + card + "Buy",
-                        EventData.of("action", "buy:" + selectedCategoryKey + ":" + entry.getKey())
-                );
-            } else {
-                clearCard(uiCommandBuilder, card);
-            }
+            uiEventBuilder.addEventBinding(
+                    CustomUIEventBindingType.Activating,
+                    "#ItemCard" + slot + "Buy",
+                    EventData.of("action", "buy:" + selectedCategoryKey + ":" + entry.getKey())
+            );
         }
 
         uiCommandBuilder.set("#PageIndicatorLabel.Text", "Page " + (currentPage + 1) + "/" + totalPages);
@@ -326,7 +337,24 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             }
         }
 
+        if (cachedBalance != null) {
+            cachedBalance = Math.max(0L, cachedBalance - item.price());
+            cachedBalanceAtMs = System.currentTimeMillis();
+        }
+
         playerRef.sendMessage(Message.raw("Purchased " + item.name() + " for " + item.price() + " " + config.currencyName() + "."));
+    }
+
+
+    private long getCachedBalance() {
+        long now = System.currentTimeMillis();
+        if (cachedBalance != null && (now - cachedBalanceAtMs) < BALANCE_TTL_MS) {
+            return cachedBalance;
+        }
+        long latest = creditsService.getBalance(playerRef.getUuid(), playerRef.getUsername());
+        cachedBalance = latest;
+        cachedBalanceAtMs = now;
+        return latest;
     }
 
     private void clearCard(UICommandBuilder uiCommandBuilder, int slot) {

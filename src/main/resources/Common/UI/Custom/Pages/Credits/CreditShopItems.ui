@@ -26,7 +26,7 @@ Group #Root {
     }
 
     Group #Body {
-      Anchor: (Top: 170, Left: 20, Width: 1360, Height: 480);
+      Anchor: (Top: 140, Left: 20, Width: 1360, Height: 480);
       LayoutMode: Left;
 
       Group #CategoryColumn {
@@ -52,9 +52,10 @@ Group #Root {
 
         Group #ItemCardsRow {
           Anchor: (Top: 68, Left: 16, Width: 1028, Height: 406);
+          LayoutMode: Center;
 
           Group #ItemCard1 {
-            Anchor: (Left: 0, Top: 0, Width: 196, Height: 406);
+            Anchor: (Top: 0, Width: 196, Height: 406);
             Background: #1E293B(0.90);
             Label #ItemCard1Name { Anchor: (Top: 10, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard1Price { Anchor: (Top: 50, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
@@ -63,7 +64,7 @@ Group #Root {
           }
 
           Group #ItemCard2 {
-            Anchor: (Left: 208, Top: 0, Width: 196, Height: 406);
+            Anchor: (Top: 0, Left: 12, Width: 196, Height: 406);
             Background: #1E293B(0.90);
             Label #ItemCard2Name { Anchor: (Top: 10, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard2Price { Anchor: (Top: 50, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
@@ -72,7 +73,7 @@ Group #Root {
           }
 
           Group #ItemCard3 {
-            Anchor: (Left: 416, Top: 0, Width: 196, Height: 406);
+            Anchor: (Top: 0, Left: 12, Width: 196, Height: 406);
             Background: #1E293B(0.90);
             Label #ItemCard3Name { Anchor: (Top: 10, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard3Price { Anchor: (Top: 50, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
@@ -81,7 +82,7 @@ Group #Root {
           }
 
           Group #ItemCard4 {
-            Anchor: (Left: 624, Top: 0, Width: 196, Height: 406);
+            Anchor: (Top: 0, Left: 12, Width: 196, Height: 406);
             Background: #1E293B(0.90);
             Label #ItemCard4Name { Anchor: (Top: 10, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard4Price { Anchor: (Top: 50, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
@@ -90,7 +91,7 @@ Group #Root {
           }
 
           Group #ItemCard5 {
-            Anchor: (Left: 832, Top: 0, Width: 196, Height: 406);
+            Anchor: (Top: 0, Left: 12, Width: 196, Height: 406);
             Background: #1E293B(0.90);
             Label #ItemCard5Name { Anchor: (Top: 10, Left: 10, Width: 176, Height: 34); Text: ""; Style: (FontSize: 20, Alignment: Center, TextColor: #F8FAFC); }
             Label #ItemCard5Price { Anchor: (Top: 50, Left: 10, Width: 176, Height: 26); Text: ""; Style: (FontSize: 18, Alignment: Center, TextColor: #FDE047); }
@@ -103,10 +104,10 @@ Group #Root {
     }
 
     Group #PaginationRow {
-      Anchor: (Top: 680, Left: 336, Width: 1028, Height: 56);
+      Anchor: (Top: 660, Left: 316, Width: 1028, Height: 56);
 
       Label #PageIndicatorLabel {
-        Anchor: (Top: 8, Left: 444, Width: 140, Height: 34);
+        Anchor: (Top: 6, Left: 444, Width: 140, Height: 34);
         Text: "";
         Style: (FontSize: 18, Alignment: Center, TextColor: #808080);
       }

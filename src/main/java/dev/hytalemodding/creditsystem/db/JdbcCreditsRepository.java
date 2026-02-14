@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 public abstract class JdbcCreditsRepository implements CreditsRepository {
@@ -18,6 +19,7 @@ public abstract class JdbcCreditsRepository implements CreditsRepository {
     private final String driverClass;
     private final Logger logger;
     private final boolean debug;
+    private final AtomicBoolean ensuredSchema = new AtomicBoolean(false);
 
     protected JdbcCreditsRepository(
             String backendName,
@@ -40,17 +42,19 @@ public abstract class JdbcCreditsRepository implements CreditsRepository {
     @Override
     public void initialize() {
         executeStatement(createTableSql());
+        ensuredSchema.set(true);
     }
 
     @Override
     public long getBalance(UUID uuid, String name) {
-        executeEnsure(uuid, name);
-        try (Connection connection = openConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT balance FROM credits WHERE player_uuid = ?")) {
-            statement.setString(1, uuid.toString());
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return resultSet.getLong("balance");
+        try (Connection connection = openConnection()) {
+            ensureRow(connection, uuid, name);
+            try (PreparedStatement statement = connection.prepareStatement("SELECT balance FROM credits WHERE player_uuid = ?")) {
+                statement.setString(1, uuid.toString());
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getLong("balance");
+                    }
                 }
             }
             return 0L;
@@ -86,9 +90,9 @@ public abstract class JdbcCreditsRepository implements CreditsRepository {
             return true;
         }
 
-        executeEnsure(uuid, name);
         try (Connection connection = openConnection();
              PreparedStatement statement = connection.prepareStatement(purchaseSql())) {
+            ensureRow(connection, uuid, name);
             statement.setString(1, name);
             statement.setLong(2, price);
             statement.setString(3, uuid.toString());
@@ -127,12 +131,16 @@ public abstract class JdbcCreditsRepository implements CreditsRepository {
 
     protected abstract String purchaseSql();
 
-    private void executeEnsure(UUID uuid, String name) {
-        try (Connection connection = openConnection();
-             PreparedStatement statement = connection.prepareStatement(ensureSql())) {
-            statement.setString(1, uuid.toString());
-            statement.setString(2, name);
-            statement.executeUpdate();
+    private void ensureRow(Connection connection, UUID uuid, String name) {
+        try {
+            if (ensuredSchema.compareAndSet(false, true)) {
+                executeStatement(createTableSql());
+            }
+            try (PreparedStatement statement = connection.prepareStatement(ensureSql())) {
+                statement.setString(1, uuid.toString());
+                statement.setString(2, name);
+                statement.executeUpdate();
+            }
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to ensure credits row", e);
         }

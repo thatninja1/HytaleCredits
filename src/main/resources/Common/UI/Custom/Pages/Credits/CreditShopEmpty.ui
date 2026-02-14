@@ -20,7 +20,7 @@ Group #Root {
     }
 
     Group #Body {
-      Anchor: (Top: 170, Left: 20, Width: 1360, Height: 480);
+      Anchor: (Top: 140, Left: 20, Width: 1360, Height: 480);
       LayoutMode: Left;
 
       Group #CategoryColumn {
