@@ -1,0 +1,100 @@
+{
+  "ui": {
+    "title": "Credit Shop",
+    "theme": {
+      "title": {
+        "color": "#E5E7EB",
+        "fontSize": 46
+      },
+      "credits": {
+        "color": "#93C5FD",
+        "fontSize": 24
+      },
+      "selectedCategory": {
+        "color": "#CBD5E1",
+        "fontSize": 20
+      },
+      "categoryButton": {
+        "color": "#FDE047",
+        "fontSize": 18
+      },
+      "closeButton": {
+        "color": "#E2E8F0",
+        "fontSize": 16
+      },
+      "pageIndicator": {
+        "color": "#CBD5E1",
+        "fontSize": 18
+      },
+      "paginationButton": {
+        "color": "#E2E8F0",
+        "fontSize": 16
+      },
+      "itemName": {
+        "color": "#F8FAFC",
+        "fontSize": 20
+      },
+      "itemPrice": {
+        "color": "#FDE047",
+        "fontSize": 18
+      },
+      "itemDescription": {
+        "color": "#CBD5E1",
+        "fontSize": 13
+      },
+      "buyLabel": {
+        "color": "#E2E8F0",
+        "fontSize": 16
+      }
+    }
+  },
+  "currencyName": "Credits",
+  "categories": [
+    {
+      "key": "vip",
+      "name": "VIP"
+    },
+    {
+      "key": "tags",
+      "name": "Tags"
+    }
+  ],
+  "storage": {
+    "type": "h2",
+    "h2": {
+      "file": "plugins/CreditSystem/credits"
+    },
+    "sqlite": {
+      "file": "plugins/CreditSystem/credits.db"
+    },
+    "mysql": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "database": "creditsystem",
+      "username": "root",
+      "password": "password",
+      "useSSL": false
+    },
+    "mariadb": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "database": "creditsystem",
+      "username": "root",
+      "password": "password",
+      "useSSL": false
+    },
+    "postgresql": {
+      "host": "127.0.0.1",
+      "port": 5432,
+      "database": "creditsystem",
+      "username": "postgres",
+      "password": "password",
+      "ssl": false
+    },
+    "mongodb": {
+      "uri": "mongodb://user:pass@127.0.0.1:27017",
+      "database": "creditsystem"
+    }
+  },
+  "debug": false
+}

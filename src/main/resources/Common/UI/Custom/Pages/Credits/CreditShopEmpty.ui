@@ -1,0 +1,64 @@
+Group #Root {
+  LayoutMode: Center;
+  Anchor: (Full: 1);
+  Background: #0b1220(0.92);
+
+  Group #RootPanel {
+    Anchor: (Width: 1400, Height: 720);
+    Background: #0f1a2b(0.97);
+
+    Label #TitleLabel {
+      Anchor: (Top: 24, Left: 20, Width: 1360, Height: 56);
+      Text: "Credit Shop";
+      Style: (FontSize: 46, Alignment: Center, TextColor: #E5E7EB);
+    }
+
+    Label #CreditsBalanceLabel {
+      Anchor: (Top: 90, Left: 20, Width: 1360, Height: 34);
+      Text: "Credits: 0";
+      Style: (FontSize: 24, Alignment: Center, TextColor: #93C5FD);
+    }
+
+    Group #Body {
+      Anchor: (Top: 140, Left: 20, Width: 1360, Height: 480);
+      LayoutMode: Left;
+
+      Group #CategoryColumn {
+        Anchor: (Width: 300, Height: 480);
+        LayoutMode: Top;
+
+        Button #CategoryButton1 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton1Label { Anchor: (Width: 260, Height: 28); Text: "VIP"; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton2 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton2Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton3 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton3Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton4 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton4Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton5 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton5Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton6 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton6Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton7 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton7Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton8 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton8Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton9 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton9Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton10 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton10Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton11 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton11Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+        Button #CategoryButton12 { Anchor: (Top: 4, Left: 10, Width: 280, Height: 34); Label #CategoryButton12Label { Anchor: (Width: 260, Height: 28); Text: ""; Style: (FontSize: 18, Alignment: Start, TextColor: #FDE047); } }
+      }
+
+      Group #MainColumn {
+        Anchor: (Width: 1060, Height: 480);
+
+        Label #CategoryPromptLabel {
+          Anchor: (Top: 20, Width: 1060, Height: 36);
+          Text: "Select a category.";
+          Style: (FontSize: 24, Alignment: Center, TextColor: #CBD5E1);
+        }
+      }
+    }
+
+    Button #CloseButton {
+      Anchor: (Top: 660, Left: 24, Width: 180, Height: 40);
+      Label #CloseButtonLabel {
+        Anchor: (Width: 160, Height: 26);
+        Text: "Close";
+        Style: (FontSize: 16, Alignment: Center, TextColor: #E2E8F0);
+      }
+    }
+  }
+}

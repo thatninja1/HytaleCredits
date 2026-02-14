@@ -1,0 +1,19 @@
+# Gradle
+.gradle/
+build/
+
+# Gradle wrapper (disallowed in this environment)
+gradlew
+gradlew.bat
+gradle/wrapper/
+
+# Binaries
+*.jar
+*.class
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.dll
+*.so
+*.dylib
