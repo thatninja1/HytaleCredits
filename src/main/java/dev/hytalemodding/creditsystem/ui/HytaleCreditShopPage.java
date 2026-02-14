@@ -38,6 +38,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private static final int DESCRIPTION_MAX_LINES = 12;
     private static final int DESCRIPTION_BASE_CHARS = 22;
     private static final long BALANCE_TTL_MS = 15000L;
+    private static final long EVENT_DEDUPE_WINDOW_MS = 150L;
 
     private final CreditsService creditsService;
     private final Supplier<CreditConfig> configSupplier;
@@ -50,6 +51,8 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     private boolean uiResourcesChecked;
     private Long cachedBalance;
     private long cachedBalanceAtMs;
+    private String lastAction;
+    private long lastActionAtMs;
 
     public HytaleCreditShopPage(PlayerRef playerRef,
                                 CreditsService creditsService,
@@ -65,6 +68,8 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         this.uiResourcesChecked = false;
         this.cachedBalance = null;
         this.cachedBalanceAtMs = 0L;
+        this.lastAction = "";
+        this.lastActionAtMs = 0L;
 
         CreditConfig activeConfig = currentConfig();
         for (CreditConfig.CategoryEntry category : activeConfig.categories()) {
@@ -181,28 +186,34 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         int start = currentPage * PAGE_SIZE;
         int end = Math.min(start + PAGE_SIZE, allItems.size());
         int count = Math.max(0, end - start);
+        int startSlot = ((PAGE_SIZE - count) / 2) + 1;
 
         for (int card = 1; card <= PAGE_SIZE; card++) {
-            uiCommandBuilder.set("#ItemCard" + card + ".Visible", false);
             clearCard(uiCommandBuilder, card);
+            uiCommandBuilder.set("#ItemCard" + card + "Buy.Visible", false);
         }
 
         for (int i = 0; i < count; i++) {
-            int slot = i + 1;
+            int slot = startSlot + i;
             Map.Entry<String, ShopItem> entry = allItems.get(start + i);
             ShopItem item = entry.getValue();
 
-            uiCommandBuilder.set("#ItemCard" + slot + ".Visible", true);
             uiCommandBuilder.set("#ItemCard" + slot + "Name.Text", item.name());
             uiCommandBuilder.set("#ItemCard" + slot + "Price.Text", item.price() + " " + config.currencyName());
 
             int charsPerLine = DESCRIPTION_BASE_CHARS;
             uiCommandBuilder.set("#ItemCard" + slot + "Desc.Text", wrapForUi(item.description(), charsPerLine, DESCRIPTION_MAX_LINES));
             uiCommandBuilder.set("#ItemCard" + slot + "BuyLabel.Text", "Buy");
+            uiCommandBuilder.set("#ItemCard" + slot + "Buy.Visible", true);
 
             uiEventBuilder.addEventBinding(
                     CustomUIEventBindingType.Activating,
                     "#ItemCard" + slot + "Buy",
+                    EventData.of("action", "buy:" + selectedCategoryKey + ":" + entry.getKey())
+            );
+            uiEventBuilder.addEventBinding(
+                    CustomUIEventBindingType.Activating,
+                    "#ItemCard" + slot + "BuyLabel",
                     EventData.of("action", "buy:" + selectedCategoryKey + ":" + entry.getKey())
             );
         }
@@ -218,17 +229,20 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         uiCommandBuilder.set("#PageIndicatorLabel.Text", "Page " + (currentPage + 1) + "/" + totalPages);
 
         uiCommandBuilder.set("#PrevPageButton.Visible", hasPrev);
-        uiCommandBuilder.set("#PrevPageButton.Enabled", hasPrev);
         uiCommandBuilder.set("#PrevPageButtonLabel.Text", hasPrev ? "Prev" : "");
 
         uiCommandBuilder.set("#NextPageButton.Visible", hasNext);
-        uiCommandBuilder.set("#NextPageButton.Enabled", hasNext);
         uiCommandBuilder.set("#NextPageButtonLabel.Text", hasNext ? "Next" : "");
 
         if (hasPrev) {
             uiEventBuilder.addEventBinding(
                     CustomUIEventBindingType.Activating,
                     "#PrevPageButton",
+                    EventData.of("action", "page:prev")
+            );
+            uiEventBuilder.addEventBinding(
+                    CustomUIEventBindingType.Activating,
+                    "#PrevPageButtonLabel",
                     EventData.of("action", "page:prev")
             );
         }
@@ -238,12 +252,27 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                     "#NextPageButton",
                     EventData.of("action", "page:next")
             );
+            uiEventBuilder.addEventBinding(
+                    CustomUIEventBindingType.Activating,
+                    "#NextPageButtonLabel",
+                    EventData.of("action", "page:next")
+            );
         }
     }
 
     @Override
     public void handleDataEvent(Ref<EntityStore> ref, Store<EntityStore> store, String eventData) {
         String action = extractAction(eventData);
+        if (action == null || action.isBlank()) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        if (action.equals(lastAction) && (now - lastActionAtMs) <= EVENT_DEDUPE_WINDOW_MS) {
+            return;
+        }
+        lastAction = action;
+        lastActionAtMs = now;
 
         if ("close".equalsIgnoreCase(action)) {
             close();
