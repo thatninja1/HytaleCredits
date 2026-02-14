@@ -211,11 +211,6 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                     "#ItemCard" + slot + "Buy",
                     EventData.of("action", "buy:" + selectedCategoryKey + ":" + entry.getKey())
             );
-            uiEventBuilder.addEventBinding(
-                    CustomUIEventBindingType.Activating,
-                    "#ItemCard" + slot + "BuyLabel",
-                    EventData.of("action", "buy:" + selectedCategoryKey + ":" + entry.getKey())
-            );
         }
 
         applyPageControls(uiCommandBuilder, uiEventBuilder, totalPages);
@@ -240,21 +235,11 @@ public final class HytaleCreditShopPage extends CustomUIPage {
                     "#PrevPageButton",
                     EventData.of("action", "page:prev")
             );
-            uiEventBuilder.addEventBinding(
-                    CustomUIEventBindingType.Activating,
-                    "#PrevPageButtonLabel",
-                    EventData.of("action", "page:prev")
-            );
         }
         if (hasNext) {
             uiEventBuilder.addEventBinding(
                     CustomUIEventBindingType.Activating,
                     "#NextPageButton",
-                    EventData.of("action", "page:next")
-            );
-            uiEventBuilder.addEventBinding(
-                    CustomUIEventBindingType.Activating,
-                    "#NextPageButtonLabel",
                     EventData.of("action", "page:next")
             );
         }
