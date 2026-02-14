@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 public final class HytaleCreditShopPage extends CustomUIPage {
     private static final int MAX_CATEGORY_BUTTONS = 12;
     private static final int PAGE_SIZE = 5;
-    private static final int DESCRIPTION_MAX_LINES = 10;
+    private static final int DESCRIPTION_MAX_LINES = 12;
     private static final int DESCRIPTION_BASE_CHARS = 22;
     private static final long BALANCE_TTL_MS = 15000L;
 
@@ -75,19 +75,22 @@ public final class HytaleCreditShopPage extends CustomUIPage {
     @Override
     public void build(Ref<EntityStore> ref, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, Store<EntityStore> store) {
         CreditConfig config = currentConfig();
+        boolean canUseThemedFiles;
         if (!uiResourcesChecked || config.debug()) {
-            if ((!ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
-                    || !ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
-                    || !validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
-                    || !validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH))) {
+            canUseThemedFiles = ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
+                    && ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH)
+                    && validateUiMarkupSafely(UiTemplateWriter.EMPTY_DISK_PATH)
+                    && validateUiMarkupSafely(UiTemplateWriter.ITEMS_DISK_PATH);
+            if (!canUseThemedFiles) {
                 logger.warning("[CreditSystem] UI files missing/invalid. Regenerating themed templates once.");
                 UiTemplateWriter.writeThemedTemplates(config, logger);
+                canUseThemedFiles = ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
+                        && ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH);
             }
-            uiResourcesChecked = true;
+            uiResourcesChecked = canUseThemedFiles;
+        } else {
+            canUseThemedFiles = true;
         }
-
-        boolean canUseThemedFiles = ensureUiResourceExists(UiTemplateWriter.EMPTY_DISK_PATH)
-                && ensureUiResourceExists(UiTemplateWriter.ITEMS_DISK_PATH);
 
         if (!canUseThemedFiles) {
             playerRef.sendMessage(Message.raw("Failed to open Credit Shop UI (resource missing)."));
@@ -180,7 +183,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
         int count = Math.max(0, end - start);
 
         for (int card = 1; card <= PAGE_SIZE; card++) {
-            uiCommandBuilder.set("#ItemCard" + card + ".Visible", "false");
+            uiCommandBuilder.set("#ItemCard" + card + ".Visible", false);
             clearCard(uiCommandBuilder, card);
         }
 
@@ -189,7 +192,7 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             Map.Entry<String, ShopItem> entry = allItems.get(start + i);
             ShopItem item = entry.getValue();
 
-            uiCommandBuilder.set("#ItemCard" + slot + ".Visible", "true");
+            uiCommandBuilder.set("#ItemCard" + slot + ".Visible", true);
             uiCommandBuilder.set("#ItemCard" + slot + "Name.Text", item.name());
             uiCommandBuilder.set("#ItemCard" + slot + "Price.Text", item.price() + " " + config.currencyName());
 
@@ -204,18 +207,32 @@ public final class HytaleCreditShopPage extends CustomUIPage {
             );
         }
 
-        uiCommandBuilder.set("#PageIndicatorLabel.Text", "Page " + (currentPage + 1) + "/" + totalPages);
-        uiCommandBuilder.set("#PrevPageButtonLabel.Text", currentPage > 0 ? "Prev" : "");
-        uiCommandBuilder.set("#NextPageButtonLabel.Text", currentPage < totalPages - 1 ? "Next" : "");
+        applyPageControls(uiCommandBuilder, uiEventBuilder, totalPages);
+    }
 
-        if (currentPage > 0) {
+
+    private void applyPageControls(UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, int totalPages) {
+        boolean hasPrev = currentPage > 0;
+        boolean hasNext = currentPage < totalPages - 1;
+
+        uiCommandBuilder.set("#PageIndicatorLabel.Text", "Page " + (currentPage + 1) + "/" + totalPages);
+
+        uiCommandBuilder.set("#PrevPageButton.Visible", hasPrev);
+        uiCommandBuilder.set("#PrevPageButton.Enabled", hasPrev);
+        uiCommandBuilder.set("#PrevPageButtonLabel.Text", hasPrev ? "Prev" : "");
+
+        uiCommandBuilder.set("#NextPageButton.Visible", hasNext);
+        uiCommandBuilder.set("#NextPageButton.Enabled", hasNext);
+        uiCommandBuilder.set("#NextPageButtonLabel.Text", hasNext ? "Next" : "");
+
+        if (hasPrev) {
             uiEventBuilder.addEventBinding(
                     CustomUIEventBindingType.Activating,
                     "#PrevPageButton",
                     EventData.of("action", "page:prev")
             );
         }
-        if (currentPage < totalPages - 1) {
+        if (hasNext) {
             uiEventBuilder.addEventBinding(
                     CustomUIEventBindingType.Activating,
                     "#NextPageButton",
